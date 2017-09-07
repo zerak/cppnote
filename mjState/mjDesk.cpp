@@ -39,7 +39,11 @@ int main()
     desk.start();
 
     // loop
-    desk.loop();
+    while (true)
+    {
+        desk.loop();
+        sleep(1);
+    }
 
     return 0;
 }

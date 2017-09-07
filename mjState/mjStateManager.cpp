@@ -140,8 +140,8 @@ void MjStateManager::start(MjState* state)
 
 void MjStateManager::loop()
 {
-    while(!m_bShutdown)
-    {
+//    while(!m_bShutdown)
+//    {
         m_ActiveStateStack.back()->update();
-    }
+//    }
 }

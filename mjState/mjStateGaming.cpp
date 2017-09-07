@@ -19,4 +19,5 @@ void MjStateGaming::exit()
 void MjStateGaming::update()
 {
     std::cout<< "state gaming update" << std::endl;
+    sleep(100);
 }
