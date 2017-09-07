@@ -1,4 +1,7 @@
 
+#ifndef MJ_STATEIDEL_H__
+#define MJ_STATEIDEL_H__
+
 #include "mjState.h"
 
 class MjStateIdel : public MjState {
@@ -13,3 +16,5 @@ public:
 
     void update();
 };
+
+#endif //   MJ_STATEIDEL_H__

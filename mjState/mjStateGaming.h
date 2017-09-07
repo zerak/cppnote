@@ -1,4 +1,7 @@
 
+#ifndef MJ_STATEGAMING_H__
+#define MJ_STATEGAMING_H__
+
 #include "mjState.h"
 
 class MjStateGaming : public MjState {
@@ -13,3 +16,5 @@ public:
 
     void update();
 };
+
+#endif //   MJ_STATEGAMING_H__
