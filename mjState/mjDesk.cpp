@@ -18,16 +18,16 @@ MjDesk::~MjDesk()
 void MjDesk::start()
 {
     m_StateMgr = new MjStateManager();
-//
-//    MjStateIdel::create(m_StateMgr,GameState_Idle);
-//    MjStateGaming::create(m_StateMgr,GameState_GameIng);
-//
-//    m_StateMgr->start(m_StateMgr->findByName(GameState_Idle));
+
+    MjStateIdel::create(m_StateMgr,GameState_Idle);
+    MjStateGaming::create(m_StateMgr,GameState_GameIng);
+
+    m_StateMgr->start(m_StateMgr->findByName(GameState_Idle));
 }
 
 void MjDesk::loop()
 {
-//    m_StateMgr->loop();
+    m_StateMgr->loop();
 }
 
 //||||||||||||||||||||
