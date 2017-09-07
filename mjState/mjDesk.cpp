@@ -33,11 +33,13 @@ void MjDesk::loop()
 //||||||||||||||||||||
 // main entry
 //||||||||||||||||||||
-void main()
+int main()
 {
     MjDesk desk;
     desk.start();
 
     // loop
     desk.loop();
+
+    return 0;
 }

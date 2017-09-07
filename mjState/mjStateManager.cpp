@@ -125,7 +125,7 @@ void MjStateManager::popAllAndPushState(MjState* state)
         m_ActiveStateStack.pop_back();
     }
 
-    pushMjState(state);
+    pushState(state);
 }
 
 void MjStateManager::init(MjState* state)

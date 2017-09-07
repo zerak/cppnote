@@ -3,7 +3,6 @@
 #define MJ_STATE_MANAGER_H__
 
 #include <vector>
-
 #include "mjState.h"
 
 class MjStateManager : public MjStateListener
