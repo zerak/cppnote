@@ -1,2 +1,5 @@
 .idea
+*.exe
+*.stackdump
+*.iml
 cmake-build-debug

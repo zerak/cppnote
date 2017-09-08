@@ -7,7 +7,7 @@
 class mjDeskDecoratorS3Y : public mjDeskDecorator {
 public:
     mjDeskDecoratorS3Y(mjDesk *desk):mjDeskDecorator(desk){}
-    ~mjDeskDecoratorS3Y(){}
+    virtual ~mjDeskDecoratorS3Y(){}
 
     void doCmd(){
         m_Desk->doCmd();
