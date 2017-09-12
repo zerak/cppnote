@@ -1,5 +1,6 @@
 
 #include "StateIdel.hpp"
+#include <iostream>
 
 StateIdel::StateIdel()
 {
@@ -8,11 +9,6 @@ StateIdel::StateIdel()
 void StateIdel::enter()
 {
     // some init
-    createScene();
-}
-
-void StateIdel::createScene()
-{
 }
 
 void StateIdel::exit()
@@ -22,4 +18,8 @@ void StateIdel::exit()
 void StateIdel::update(double timeSinceLastFrame)
 {
     // idel state udpate
+    std::cout<<"state idel update" << std::endl;
+
+    // for test
+    changeAppState(findByName(GAME_STATE_START));
 }

@@ -1,6 +1,7 @@
 
 #include "StateIdel.hpp"
 #include "StateStart.hpp"
+#include "StateGaming.hpp"
 #include "AppStateManager.hpp"
 
 #include <unistd.h>
@@ -20,14 +21,14 @@ public:
     {
         m_pStateMgr = new AppStateManager();
 
-        StateIdel::create(stateMgr,GAME_STATE_IDEL);
-        StateStart::create(stateMgr,GAME_STATE_START);
-        StateGaming::create(stateMgr,GAME_STATE_GAMING);
+        StateIdel::create(m_pStateMgr,GAME_STATE_IDEL);
+        StateStart::create(m_pStateMgr,GAME_STATE_START);
+        StateGaming::create(m_pStateMgr,GAME_STATE_GAMING);
     }
 
     void start()
     {
-        m_pStateMgr->start(stateMgr->findByName(GAME_STATE_IDEL));
+        m_pStateMgr->start(m_pStateMgr->findByName(GAME_STATE_IDEL));
     }
 
     void update(double timeSinceLastFrame)
@@ -43,8 +44,7 @@ int main()
 {
     Demo demo;
     demo.init();
-
-    demo.Start();
+    demo.start();
 
     while (true)
     {

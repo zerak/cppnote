@@ -1,6 +1,6 @@
 
-#ifndef STATE_IDEL_HPP
-#define STATE_IDEL_HPP
+#ifndef STATE_GAMING_HPP
+#define STATE_GAMING_HPP
 
 #include "AppState.hpp"
 
