@@ -18,7 +18,7 @@ public:
 
     virtual void manageAppState(GameState stateName, AppState* state) = 0;
 
-    virtual AppState*	findByName(Ogre::String stateName) = 0;
+    virtual AppState*	findByName(GameState stateName) = 0;
     virtual void		changeAppState(AppState *state) = 0;
     virtual bool		pushAppState(AppState* state) = 0;
     virtual void		popAppState() = 0;
