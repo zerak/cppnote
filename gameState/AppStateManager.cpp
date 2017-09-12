@@ -143,6 +143,6 @@ void AppStateManager::update(double timeSinceLastFrame)
 {
 //    while (!m_bShutdown)
 //    {
-        m_ActiveStateStack.back().update(timeSinceLastFrame);
+        m_ActiveStateStack.back()->update(timeSinceLastFrame);
 //    }
 }
