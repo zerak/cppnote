@@ -3,6 +3,7 @@
 #define APP_STATE_MANAGER_HPP
 
 #include "AppState.hpp"
+#include <vector>
 
 class AppStateManager : public AppStateListener
 {
@@ -27,6 +28,8 @@ public:
     void pauseAppState();
     void shutdown();
     void popAllAndPushAppState(AppState* state);
+
+    void update(double timeSinceLastFrame);
 
 protected:
     void init(AppState *state);

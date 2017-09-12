@@ -16,7 +16,7 @@ public:
     void update(double timeSinceLastFrame);
 
 private:
-    bool m_bQuit;
+
 };
 
 #endif

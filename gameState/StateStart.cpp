@@ -3,7 +3,6 @@
 
 StateStart::StateStart()
 {
-    m_bQuit = false;
 }
 
 void StateStart::enter()
@@ -17,5 +16,5 @@ void StateStart::exit()
 
 void StateStart::update(double timeSinceLastFrame)
 {
-    // update
+    // state start update
 }

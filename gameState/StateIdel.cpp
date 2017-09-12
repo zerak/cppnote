@@ -3,7 +3,6 @@
 
 StateIdel::StateIdel()
 {
-    m_bQuit         = false;
 }
 
 void StateIdel::enter()
@@ -22,9 +21,5 @@ void StateIdel::exit()
 
 void StateIdel::update(double timeSinceLastFrame)
 {
-    if(m_bQuit == true)
-    {
-        shutdown();
-        return;
-    }
+    // idel state udpate
 }

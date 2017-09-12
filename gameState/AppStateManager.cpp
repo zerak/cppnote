@@ -55,42 +55,6 @@ AppState* AppStateManager::findByName(GameState stateName)
 void AppStateManager::start(AppState* state)
 {
     changeAppState(state);
-
-    int timeSinceLastFrame = 1;
-    int startTime = 0;
-
-    while(!m_bShutdown)
-    {
-        if(OgreFramework::getSingletonPtr()->m_pRenderWnd->isClosed())m_bShutdown = true;
-
-        Ogre::WindowEventUtilities::messagePump();
-
-        if(OgreFramework::getSingletonPtr()->m_pRenderWnd->isActive())
-        {
-            startTime = OgreFramework::getSingletonPtr()->m_pTimer->getMillisecondsCPU();
-
-            OgreFramework::getSingletonPtr()->m_pKeyboard->capture();
-            OgreFramework::getSingletonPtr()->m_pMouse->capture();
-
-            m_ActiveStateStack.back()->update(timeSinceLastFrame);
-
-            OgreFramework::getSingletonPtr()->updateOgre(timeSinceLastFrame);
-            OgreFramework::getSingletonPtr()->m_pRoot->renderOneFrame();
-
-            timeSinceLastFrame = OgreFramework::getSingletonPtr()->m_pTimer->getMillisecondsCPU() - startTime;
-        }
-        else
-        {
-#if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
-            Sleep(1000);
-#else
-            sleep(1);
-#endif
-        }
-    }
-
-    // Main loop quit
-    // ...
 }
 
 void AppStateManager::changeAppState(AppState* state)
@@ -172,4 +136,13 @@ void AppStateManager::shutdown()
 
 void AppStateManager::init(AppState* state)
 {
+    // set state listener
+}
+
+void AppStateManager::update(double timeSinceLastFrame)
+{
+//    while (!m_bShutdown)
+//    {
+        m_ActiveStateStack.back().update(timeSinceLastFrame);
+//    }
 }
