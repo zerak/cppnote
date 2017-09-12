@@ -3,17 +3,16 @@
 #include "StateStart.hpp"
 #include "AppStateManager.hpp"
 
+#include <unistd.h>
+
 class Demo
 {
 public:
     Demo(){m_pStateMgr = 0;}
     ~Demo()
     {
-        if (m_pStateMgr != nullptr)
-        {
-            delete m_pStateMgr;
-            m_pStateMgr = nullptr;
-        }
+        delete m_pStateMgr;
+        m_pStateMgr = 0;
     }
 
 public:
@@ -26,9 +25,14 @@ public:
         StateGaming::create(stateMgr,GAME_STATE_GAMING);
     }
 
-    void Start()
+    void start()
     {
-        stateMgr->start(stateMgr->findByName(GAME_STATE_IDEL));
+        m_pStateMgr->start(stateMgr->findByName(GAME_STATE_IDEL));
+    }
+
+    void update(double timeSinceLastFrame)
+    {
+       m_pStateMgr->update(timeSinceLastFrame);
     }
 
 private:
@@ -37,4 +41,16 @@ private:
 
 int main()
 {
+    Demo demo;
+    demo.init();
+
+    demo.Start();
+
+    while (true)
+    {
+        demo.update(0);
+        sleep(1);
+    }
+
+    return 0;
 }
