@@ -2,14 +2,15 @@
 #ifndef HANDLE_PUTMJ_HPP
 #define HANDLE_PUTMJ_HPP
 
-#include "../mjEventHandler.h"
+#include "../mjMsgHandler.h"
 
-class HandlePutMj : public EventHandler {
+// 出牌
+class HandlePutMj : public MsgHandler {
 public:
     ~HandlePutMj(){}
 
 public:
-    virtual void processEvent(Packet *pPacket, GamePlayer *pPlayer)
+    virtual void processMsg (Packet *pPacket, GamePlayer *pPlayer)
     {
         // process
     }
