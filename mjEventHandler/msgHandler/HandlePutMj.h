@@ -3,6 +3,7 @@
 #define HANDLE_PUTMJ_HPP
 
 #include "../mjMsgHandler.h"
+#include <iostream>
 
 // 出牌
 class HandlePutMj : public MsgHandler {
@@ -13,6 +14,7 @@ public:
     virtual void processMsg (Packet *pPacket, GamePlayer *pPlayer)
     {
         // process
+        std::cout<<"process msg put mj" << std::endl;
     }
 };
 

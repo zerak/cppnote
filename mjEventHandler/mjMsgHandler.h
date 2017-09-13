@@ -3,6 +3,8 @@
 #define MJ_MSGHANDLER_H__
 
 #include "mjCmdNo.h"
+#include <map>
+using namespace std;
 
 class Packet;
 class GamePlayer;
@@ -16,18 +18,44 @@ public:
 
 class MsgHandlerMgr {
 public:
-    MsgHandlerMgr();
-    virtual ~MsgHandlerMgr();
+    MsgHandlerMgr(){
+        m_Handlers.clear();
+    };
+    virtual ~MsgHandlerMgr(){
+        exit();
+    }
 
 public:
-    int init();
-    int exit();
+    void init() {
+        // do something init
+    }
 
-    MsgHandler *getHandler(CmdNo msgType, MsgHandler *handler);
+    void exit() {
+       MsgHandlerIte ite = m_Handlers.begin();
+        for ( ite; ite != m_Handlers.end(); ite++ ) {
+            if ( ite->second != 0 ){
+                delete ite->second;
+                ite->second = 0;
+            }
+        }
+
+        m_Handlers.clear();
+    }
+
+    MsgHandler *getHandler(CmdNo msgType) {
+        return m_Handlers[msgType];
+    }
+
+    void addHandle(CmdNo msgType, MsgHandler *handler) {
+        if (handler == 0) {
+            return;
+        }
+        m_Handlers[msgType] = handler;
+    }
 
 private:
     typedef map<CmdNo, MsgHandler*> MsgHandlerMap;
-    typedef map<CmdNo, MsgHandler*>::iterator MsgHandlerIte;
+    typedef MsgHandlerMap::iterator MsgHandlerIte;
 
     MsgHandlerMap m_Handlers;
 };
