@@ -1,2 +1,2 @@
 # cppnote
-c++ pro
+c++ pro for design patterns
