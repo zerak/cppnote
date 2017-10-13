@@ -18,6 +18,9 @@ public:
         return value;
     }
     void notify();
+    int &getInt(){
+        return  &value;
+    }
 };
 
 class Observer {
