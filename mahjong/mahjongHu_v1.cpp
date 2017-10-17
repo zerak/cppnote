@@ -330,6 +330,7 @@ public:
         //cout << "total count:" << count << " tmMapSize:" << tbTmp.size() << endl;
     }
 
+    // case ke0 shun4
     void case04(Key &key) {
         chooseFrom(m_dShunzi, m_dChooseShunzi, 4, m_dShunzi.size());
         for (tbMap::iterator iteShunzi = m_dChooseShunzi.begin(); iteShunzi!= m_dChooseShunzi.end(); iteShunzi++) {
