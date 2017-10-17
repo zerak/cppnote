@@ -181,6 +181,10 @@ public:
         char name[256];
         sprintf(name, "tbl/table_%s.tbl", tpe.c_str());
         FILE *fp = fopen(name, "wb+");
+        if (fp == NULL) {
+            cout << "can't open file " << name << endl;
+            return;
+        }
 
         tbMap tbl = d;
 
