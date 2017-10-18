@@ -1,5 +1,5 @@
 
-#include <stdlib.h> // itoa
+//#include <stdlib.h> // itoa
 #include <stdio.h>
 #include <unistd.h> // sleep
 #include <cstdlib>	// srand
@@ -14,6 +14,8 @@
 using namespace std;
 
 class MjMapTbV2 {
+private:
+#define MAX_HUN_COUNT 8
 	typedef int Key;
 	typedef int Val;
 	typedef map<Key, Val> tbMap;
@@ -32,12 +34,12 @@ public:
 		return Val(0);
 	}
 
-	tbMap& getMap(MjType tpe) {
+	tbMap& getMap(MjType tpe, int hunCount) {
 		if (tpe == SanSe) {
-			return m_dFinalSanSe;
+			return m_dFinalSanSeHun[hunCount];
 		}
 
-		return m_dFinalFeng;
+		return m_dFinalFengHun[hunCount];
 	}
 
 	void add(tbMap &tm, Key &key, Val &val) {
@@ -48,17 +50,17 @@ public:
 		tm.insert(make_pair(key, val));
 	}
 
-	string getTbName(MjType tpe) {
+	string getTbName(MjType tpe, int hunCount) {
 		if (tpe == SanSe) {
-			return "sanse";
+			return "sanse" + itos(hunCount);
 		}
 
-		return "feng";
+		return "feng" + itos(hunCount);
 	}
 
-	bool loadTb(MjType tpe) {
+	bool loadTb(MjType tpe, int hunCount) {
 		char name[256];
-		sprintf(name, "tbl/table_%s.tbl", getTbName(tpe).c_str());
+		sprintf(name, "tbl/table_%s.tbl", getTbName(tpe, hunCount).c_str());
 		FILE *fp = fopen(name, "rb");
 		if (fp == NULL) {
 			cout << "can't load table:" << name << endl;
@@ -69,20 +71,20 @@ public:
 		int key = 0;
 		while (fscanf(fp, "%d\n", &key) != EOF) {
 			Val val = getVal();
-			add(getMap(tpe), key, val);
+			add(getMap(tpe, hunCount), key, val);
 			num++;
 		}
-		cout << "load table:" << name << " " << num << "times, size:" << getMap(tpe).size() << endl;
+		cout << "load table:" << name << " " << num << "times, size:" << getMap(tpe, hunCount).size() << endl;
 		fclose(fp);
 		return true;
 	}
 
 	void load() {
-		if (!loadTb(SanSe)) {
+		if (!loadTb(SanSe, 0)) {
 			//genSanSeJiang();
 			genSanSeKe();       // 生成三色牌Ke
 			genSanSeShun();     // 生成三色牌ShunZi
-								//genFengJiang();
+			//genFengJiang();
 			genFengKe();        // 生成风字牌Ke
 
 			genSanSeMap();
@@ -94,8 +96,14 @@ public:
 		cout << "sanseShun:" << m_dSanSeShun.size() << endl;
 		cout << "fengKe:" << m_dFengKe.size() << endl;
 
+		// begin from 1hun
+		for (int i = 1; i < sizeof(m_dFinalSanSeHun) / sizeof(m_dFinalSanSeHun[0]); ++i) {
+			loadTb(SanSe, i);
+		}
 		// load feng
-		loadTb(FengZi);
+		for (int j = 0; j < sizeof(m_dFinalFengHun) / sizeof(m_dFinalFengHun[0]); ++j) {
+			loadTb(FengZi, j);
+		}
 	}
 
 	bool valid(Key key) {
@@ -172,6 +180,31 @@ public:
 			key += list[i] * pow(10, size - (i + 1));
 		}
 		return key;
+	}
+	// todo
+	tbVec getKey(Key key) {
+		tbVec vec;
+		char buf[9];
+		sprintf(buf, "%d", key);
+		char tmp[9];
+		memset(tmp, 0, sizeof(tmp));
+		for (int i = 0; i < sizeof(buf); ++i) {
+			if (buf[i] - '0' > 0){
+				buf[i]--;
+				memcpy(tmp, buf, sizeof(tmp));
+				int num = atoi(tmp);
+				if (num>0) {
+					vec.push_back(atoi(tmp));
+				}
+				buf[i]++;
+			}
+		}
+		cout << "key:" << key << " buf:" << buf << endl;
+		for (int j = 0; j < vec.size(); ++j) {
+			cout << vec[j] << " ";
+		}
+		cout << "vec size:" << vec.size() << endl;
+		return vec;
 	}
 
 	tbVec& genSanSeJiang() {
@@ -263,7 +296,14 @@ public:
 		fclose(fp);
 	}
 
-	void caseKeShun(tbVec &vecKe, tbVec &vecShun, int countKe, int countShun) {
+	string itos(int num) {
+		string str;
+		char buf[] = {0, 0, 0, 0};
+		sprintf(buf, "%d", num);
+		str = buf;
+		return str;
+	}
+	void caseKeShun(tbVec &vecKe, tbVec &vecShun, int countKe, int countShun, tbMap& dest) {
 		tbMap tmpData;
 		chooseFrom(vecKe, tmpData, countKe, vecKe.size());
 		//cout << "chooseKe size:" << vecKe.size() << endl;
@@ -275,7 +315,7 @@ public:
 				tbMap tmpDataShun;
 				chooseFrom(vecShun, tmpDataShun, countShun, vecShun.size());
 				if (countShun <= 0) {
-					m_dFinalSanSe.insert(make_pair(tmp, getVal()));
+					dest.insert(make_pair(tmp, getVal()));
 				}
 				else {
 					//cout << "chooseShunzi size:" << m_dChooseShunzi.size() << endl;
@@ -283,7 +323,7 @@ public:
 						Key tmp2 = KeyOpAdd(tmp, iteShun->first);
 						if (valid(tmp2)) {
 							//cout << iteShunzi->first << " shunKey" << endl;
-							m_dFinalSanSe.insert(make_pair(tmp2, getVal()));
+							dest.insert(make_pair(tmp2, getVal()));
 							//cout << tmp2 << " " << countKe << "ke " << countShun << "shun key" << endl;
 							//break;
 						}
@@ -293,79 +333,113 @@ public:
 			}
 		}
 	}
-	void genSanSe1() {
+	void genSanSe1(tbMap& tb) {
 		// ke1 shun0
 		// ke0 shun1
-		chooseFrom(m_dSanSeKe, m_dFinalSanSe, 1, m_dSanSeKe.size());    // ke c(9/1)
-		chooseFrom(m_dSanSeShun, m_dFinalSanSe, 1, m_dSanSeShun.size());    // shun c(7/1)
+		chooseFrom(m_dSanSeKe, tb, 1, m_dSanSeKe.size());    // ke c(9/1)
+		chooseFrom(m_dSanSeShun, tb, 1, m_dSanSeShun.size());    // shun c(7/1)
 	}
-	void genSanSe2() {
+	void genSanSe2(tbMap& tb) {
 		// ke2 shun0
 		// ke1 shun1
 		// ke0 shun2
 		// 2-0
-		chooseFrom(m_dSanSeKe, m_dFinalSanSe, 2, m_dSanSeKe.size());    // ke c(9/2)
+		chooseFrom(m_dSanSeKe, tb, 2, m_dSanSeKe.size());    // ke c(9/2)
 
-																		// 1-1
-		caseKeShun(m_dSanSeKe, m_dSanSeShun, 1, 1);
+		// 1-1
+		caseKeShun(m_dSanSeKe, m_dSanSeShun, 1, 1, tb);
 
 		// 0-2
-		chooseFrom(m_dSanSeShun, m_dFinalSanSe, 2, m_dSanSeShun.size());     // shun c(7/2)
+		chooseFrom(m_dSanSeShun, tb, 2, m_dSanSeShun.size());     // shun c(7/2)
 	}
-	void genSanSe3() {
+	void genSanSe3(tbMap& tb) {
 		// ke3 shun0
 		// ke2 shun1
 		// ke1 shun2
 		// ke0 shun3
 		// 3-0
-		chooseFrom(m_dSanSeKe, m_dFinalSanSe, 3, m_dSanSeKe.size());
+		chooseFrom(m_dSanSeKe, tb, 3, m_dSanSeKe.size());
 
 		// 2-1
-		caseKeShun(m_dSanSeKe, m_dSanSeShun, 2, 1);
+		caseKeShun(m_dSanSeKe, m_dSanSeShun, 2, 1, tb);
 
 		// 1-2
-		caseKeShun(m_dSanSeKe, m_dSanSeShun, 1, 2);
+		caseKeShun(m_dSanSeKe, m_dSanSeShun, 1, 2, tb);
 
 		// 0-3
-		chooseFrom(m_dSanSeShun, m_dFinalSanSe, 3, m_dSanSeShun.size());
+		chooseFrom(m_dSanSeShun, tb, 3, m_dSanSeShun.size());
 	}
-	void genSanSe4() {
+	void genSanSe4(tbMap& tb) {
 		// ke4 shun0
 		// ke3 shun1
 		// ke2 shun2
 		// ke1 shun3
 		// ke0 shun4
 		// 4-0
-		chooseFrom(m_dSanSeKe, m_dFinalSanSe, 4, m_dSanSeKe.size());
+		chooseFrom(m_dSanSeKe, tb, 4, m_dSanSeKe.size());
 
 		// 3-1
-		caseKeShun(m_dSanSeKe, m_dSanSeShun, 3, 1);
+		caseKeShun(m_dSanSeKe, m_dSanSeShun, 3, 1, tb);
 
 		// 2-2
-		caseKeShun(m_dSanSeKe, m_dSanSeShun, 2, 2);
+		caseKeShun(m_dSanSeKe, m_dSanSeShun, 2, 2, tb);
 
 		// 1-3
-		caseKeShun(m_dSanSeKe, m_dSanSeShun, 1, 3);
+		caseKeShun(m_dSanSeKe, m_dSanSeShun, 1, 3, tb);
 
 		// 0-4
-		chooseFrom(m_dSanSeShun, m_dFinalSanSe, 4, m_dSanSeShun.size());
+		chooseFrom(m_dSanSeShun, tb, 4, m_dSanSeShun.size());
 	}
 	void genSanSeMap() {
-		genSanSe1();
-		genSanSe2();
-		genSanSe3();
-		genSanSe4();
-		dumpTest(m_dFinalSanSe, "sanse");
-		cout << "sanseKeShun size:" << m_dFinalSanSe.size() << endl;
+		genSanSe1(m_dFinalSanSeHun[0]);
+		genSanSe2(m_dFinalSanSeHun[0]);
+		genSanSe3(m_dFinalSanSeHun[0]);
+		genSanSe4(m_dFinalSanSeHun[0]);
+
+		// hun
+		for (int hunCount = 0; hunCount < sizeof(m_dFinalSanSeHun) / sizeof(m_dFinalSanSeHun[0]) -1; ++hunCount) {
+			//cout << "sanseHun:" << hunCount << endl;
+			tbMap tmp = getMap(SanSe, hunCount);
+			for (tbMap::iterator ite = tmp.begin(); ite != tmp.end(); ++ite) {
+				tbVec keyVec = getKey(ite->first); // 拿到Key，分别减1
+				for (tbVec::iterator ite = keyVec.begin(); ite != keyVec.end(); ++ite) {
+					Key key = *ite;
+					m_dFinalSanSeHun[hunCount+1].insert(make_pair(key, getVal()));
+				}
+			}
+		}
+
+		// dumpSanSeHun
+		for (int i = 0; i < sizeof(m_dFinalSanSeHun) / sizeof(m_dFinalSanSeHun[0]); ++i) {
+			dumpTest(m_dFinalSanSeHun[i], "sanse"+itos(i));
+			//cout << "sanseKeShun size:" << m_dFinalSanSeHun[i].size() << endl;
+		}
 	}
 
 	void genFengMap() {
-		chooseFrom(m_dFengKe, m_dFinalFeng, 1, m_dFengKe.size());
-		chooseFrom(m_dFengKe, m_dFinalFeng, 2, m_dFengKe.size());
-		chooseFrom(m_dFengKe, m_dFinalFeng, 3, m_dFengKe.size());
-		chooseFrom(m_dFengKe, m_dFinalFeng, 4, m_dFengKe.size());
-		dumpTest(m_dFinalFeng, "feng");
-		cout << "fengKe size:" << m_dFinalFeng.size() << endl;
+		chooseFrom(m_dFengKe, m_dFinalFengHun[0], 1, m_dFengKe.size());
+		chooseFrom(m_dFengKe, m_dFinalFengHun[0], 2, m_dFengKe.size());
+		chooseFrom(m_dFengKe, m_dFinalFengHun[0], 3, m_dFengKe.size());
+		chooseFrom(m_dFengKe, m_dFinalFengHun[0], 4, m_dFengKe.size());
+
+		// hun
+		for (int hunCount = 0; hunCount < sizeof(m_dFinalFengHun) / sizeof(m_dFinalFengHun[0]) -1; ++hunCount) {
+			//cout << "fengHun:" << hunCount << endl;
+			tbMap tmp = getMap(FengZi, hunCount);
+			for (tbMap::iterator ite = tmp.begin(); ite != tmp.end(); ++ite) {
+				tbVec keyVec = getKey(ite->first); // 拿到Key，分别减1
+				for (tbVec::iterator ite = keyVec.begin(); ite != keyVec.end(); ++ite) {
+					Key key = *ite;
+					m_dFinalFengHun[hunCount+1].insert(make_pair(key, getVal()));
+				}
+			}
+		}
+
+		// dumpFengHun
+		for (int i = 0; i < sizeof(m_dFinalSanSeHun) / sizeof(m_dFinalSanSeHun[0]); ++i) {
+			dumpTest(m_dFinalFengHun[i], "feng"+itos(i));
+			//cout << "fengKe size:" << m_dFinalFengHun[i].size() << endl;
+		}
 	}
 
 	void genMap() {
@@ -373,8 +447,8 @@ public:
 		genFengMap();
 	}
 
-	bool check(Key key, MjType tpe) {
-		tbMap &d = getMap(tpe);
+	bool check(Key key, MjType tpe, int hunCount) {
+		tbMap &d = getMap(tpe, hunCount);
 		tbMap::iterator ite = d.find(key);
 		if (ite == d.end()) {
 			return false;
@@ -409,7 +483,7 @@ public:
 			++first;
 		}
 	}
-	bool checkFengSe(int *list, int len) {
+	bool checkFengSe(int *list, int len, int hunCount) {
 		int iteFeng, iteWan, iteTiao, iteTong;
 		iteFeng = iteWan = iteTiao = iteTong = 0;
 		int feng[7], wan[9], tiao[9], tong[9];
@@ -444,25 +518,25 @@ public:
 
 		if (iteFeng > 0) {
 			Key fKey = getKey(feng, sizeof(feng) / sizeof(feng[0]));
-			if (!check(fKey, FengZi)) {
+			if (!check(fKey, FengZi, hunCount)) {
 				return false;
 			}
 		}
 		if (iteWan > 0) {
 			Key wKey = getKey(wan, sizeof(wan) / sizeof(wan[0]));
-			if (!check(wKey, SanSe)) {
+			if (!check(wKey, SanSe, hunCount)) {
 				return false;
 			}
 		}
 		if (iteTiao > 0) {
 			Key tiKey = getKey(tiao, sizeof(tiao) / sizeof(tiao[0]));
-			if (!check(tiKey, SanSe)) {
+			if (!check(tiKey, SanSe, hunCount)) {
 				return false;
 			}
 		}
 		if (iteTong > 0) {
 			Key tKey = getKey(tong, sizeof(tong) / sizeof(tong[0]));
-			if (!check(tKey, SanSe)) {
+			if (!check(tKey, SanSe, hunCount)) {
 				return false;
 			}
 		}
@@ -485,10 +559,12 @@ public:
 			return false;
 		}
 
+		// todo
+		int hunCount = 0;
 		// 检查去将后的牌
 		for (int i = 0; i < sizeof(arrJiang) / sizeof(arrJiang[0]); ++i) {
 			list[arrJiang[i]] -= 2; // 过滤将
-			if (checkFengSe(list, len)) {
+			if (checkFengSe(list, len, hunCount)) {
 				return true;
 			}
 			list[arrJiang[i]] += 2;
@@ -496,10 +572,10 @@ public:
 		return false;
 	}
 private:
-	tbMap m_dFinalSanSe;         // 最终存放生成三色数据
-	tbMap m_dFinalFeng;          // 最终存放生成风字数据
+	tbMap m_dFinalSanSeHun[MAX_HUN_COUNT+1];    // 最终存放带混三色数据
+	tbMap m_dFinalFengHun[MAX_HUN_COUNT+1];     // 最终存放带混风字数据
 
-								 // tmpData
+	// tmpData
 	tbVec m_dSanSeJiang;
 	tbVec m_dSanSeKe;       // 用于生成三色牌Ke c(n/m)
 	tbVec m_dSanSeShun;     // 用于生成三色牌Shun c(n/m)
@@ -602,12 +678,12 @@ int main(int argc, char **argv) {
 	t.load();
 	// 原手牌格式
 	int cards[] = {
-		0,                            // 混个数
-		2, 3, 0, 0, 0, 0, 0,          // 风字牌1-7
-		0, 0, 1, 1, 1, 0, 0, 0, 0,    // 万8-16
-		0, 0, 0, 0, 0, 1, 1, 1, 1,    // 条17-25
-		0, 0, 0, 0, 1, 1, 1, 0, 0,    // 筒26-34
-		0, 0, 0, 0, 0, 0, 0, 0        // 花35-42
+			0,                            // 混个数
+			2, 3, 0, 0, 0, 0, 0,          // 风字牌1-7
+			0, 0, 1, 1, 1, 0, 0, 0, 0,    // 万8-16
+			0, 0, 0, 0, 0, 1, 1, 1, 0,    // 条17-25
+			0, 0, 0, 0, 1, 1, 1, 0, 0,    // 筒26-34
+			0, 0, 0, 0, 0, 0, 0, 0        // 花35-42
 	};
 
 	double timeUse = 0;
@@ -621,8 +697,8 @@ int main(int argc, char **argv) {
 
 	if (argc < 2) {
 		cout << "USAGE:\n"
-			"1,gen map to file.\n"
-			"2,benchmark." << endl;
+				"1,gen map to file.\n"
+				"2,benchmark." << endl;
 		return 0;
 	}
 
@@ -643,7 +719,7 @@ int main(int argc, char **argv) {
 	else {
 		cout << "arg err check usage." << endl;
 		cout << "1,gen map to file.\n"
-			"2,benchmark." << endl;
+				"2,benchmark." << endl;
 	}
 
 	return 0;
