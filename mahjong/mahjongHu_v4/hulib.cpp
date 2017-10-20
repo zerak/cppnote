@@ -1,6 +1,6 @@
-#include <string.h>
 #include "hulib.h"
 #include "table_mgr.h"
+#include <string.h>
 
 bool HuLib::get_hu_info(char* cards, char cur_card, int gui_index) {
 	int gui_num = 0;

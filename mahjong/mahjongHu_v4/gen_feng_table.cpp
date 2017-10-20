@@ -1,7 +1,7 @@
+#include "table_mgr.h"
 #include <stdio.h>
 #include <set>
 #include <map>
-#include "table_mgr.h"
 
 std::map<int, bool> gui_tested[9];
 std::map<int, bool> gui_eye_tested[9];

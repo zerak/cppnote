@@ -2,7 +2,7 @@
 #ifndef hu_lib_h__
 #define hu_lib_h__
 
-#include <string.h>
+//#include <string.h>
 
 class HuLib
 {

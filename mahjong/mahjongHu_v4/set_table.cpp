@@ -1,6 +1,6 @@
+#include "set_table.h"
 #include <stdio.h>
 #include <string.h>
-#include "set_table.h"
 #include <algorithm>
 #include <vector>
 
