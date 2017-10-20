@@ -1,4 +1,6 @@
-#pragma once
+
+#ifndef table_h__
+#define table_h__
 
 class Table {
 public:
@@ -11,3 +13,5 @@ public:
     virtual void dump(char* name)=0;
     virtual void load(char* name)=0;
 };
+
+#endif // table_h__

@@ -1,3 +1,7 @@
+
+#ifndef set_table_h__
+#define set_table_h__
+
 #include "table.h"
 #include <set>
 
@@ -15,3 +19,5 @@ public:
     virtual void dump(char* name);
     virtual void load(char* name);
 };
+
+#endif // set_table_h__

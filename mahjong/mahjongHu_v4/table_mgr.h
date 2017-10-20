@@ -1,3 +1,7 @@
+
+#ifndef table_mgr_h__
+#define table_mgr_h__
+
 #include "table.h"
 
 #define MAX_GUI_NUM 8
@@ -19,3 +23,5 @@ public:
 	static Table* m_check_feng_table[MAX_GUI_NUM + 1];
 	static Table* m_check_feng_eye_table[MAX_GUI_NUM + 1];
 };
+
+#endif // table_mgr_h__

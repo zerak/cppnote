@@ -1,8 +1,8 @@
-#include <string.h>
 
-struct Wave
-{
-};
+#ifndef hu_lib_h__
+#define hu_lib_h__
+
+#include <string.h>
 
 class HuLib
 {
@@ -12,3 +12,5 @@ private:
 	static bool split(char* const cards, int gui_num);
 	static int _split(char* const cards, int gui_num, int min, int max, bool chi, int& eye_num);
 };
+
+#endif // hu_lib_h__
