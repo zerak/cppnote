@@ -20,11 +20,82 @@ private:
 	typedef int Val;
 	typedef map<Key, Val> tbMap;
 	typedef vector<Key> tbVec;
+
 public:
 	MjMapTbV2() {}
 	~MjMapTbV2() {}
 
 public:
+	void load() {
+		if (!loadTb(SanSe, 0)) {
+			cout << "gen map" << endl;
+			//genSanSeJiang();
+			genSanSeKe();       // 生成三色牌Ke
+			genSanSeShun();     // 生成三色牌ShunZi
+			//genFengJiang();
+			genFengKe();        // 生成风字牌Ke
+
+			genSanSeMap();
+			genFengMap();
+			return;
+		}
+
+		//cout << "sanseKe:" << m_dSanSeKe.size() << endl;
+		//cout << "sanseShun:" << m_dSanSeShun.size() << endl;
+		//cout << "fengKe:" << m_dFengKe.size() << endl;
+
+		// begin from 1hun
+		for (int i = 1; i < sizeof(m_dFinalSanSeHun) / sizeof(m_dFinalSanSeHun[0]); ++i) {
+			loadTb(SanSe, i);
+		}
+		// load feng
+		for (int j = 0; j < sizeof(m_dFinalFengHun) / sizeof(m_dFinalFengHun[0]); ++j) {
+			loadTb(FengZi, j);
+		}
+	}
+
+	// handList: 当前手牌
+	// len: handList长度
+	// mjCcodeIdx: 最后拿的牌index
+	// hunCount: 混个数
+	bool checkHu(int *handList, int len, int hunCount) {
+		// check 3n2
+//        if (!is3N2(handList, len, hunCount)) {
+//            return false;
+//        }
+
+		if (hunCount > 0) {
+			return checkHuHun(handList, len, hunCount);
+		}
+
+		// 过滤将牌
+		int arrJiang[7]; // 最多有7个将
+		memset(arrJiang, 0, sizeof(arrJiang));
+		int jiangCount = splitJiang(handList, handList + len, arrJiang);
+		if (handList[arrJiang[0]] < 2) {
+			// 如果满足3n2,arrJiang一定会被赋值
+			// 3n2 double check
+			return false;
+		}
+
+		// todo
+		// 检查去将后的牌
+		for (int i = 0; i < jiangCount; ++i) {
+			//cout << "check jiang:" << i << " " << arrJiang[i] << endl;
+//            if(arrJiang[i] <= 0) {
+//                return false;
+//            }
+			handList[arrJiang[i]] -= 2; // 过滤将
+			if (splitFengSe(handList, len, hunCount)) {
+				handList[arrJiang[i]] += 2;
+				return true;
+			}
+			handList[arrJiang[i]] += 2;
+		}
+		return false;
+	}
+
+private:
 	enum MjType {
 		SanSe = 0,
 		FengZi = 1
@@ -77,33 +148,6 @@ public:
 		cout << "load table:" << name << " " << num << "times, size:" << getMap(tpe, hunCount).size() << endl;
 		fclose(fp);
 		return true;
-	}
-
-	void load() {
-		if (!loadTb(SanSe, 0)) {
-			//genSanSeJiang();
-			genSanSeKe();       // 生成三色牌Ke
-			genSanSeShun();     // 生成三色牌ShunZi
-			//genFengJiang();
-			genFengKe();        // 生成风字牌Ke
-
-			genSanSeMap();
-			genFengMap();
-			return;
-		}
-
-		cout << "sanseKe:" << m_dSanSeKe.size() << endl;
-		cout << "sanseShun:" << m_dSanSeShun.size() << endl;
-		cout << "fengKe:" << m_dFengKe.size() << endl;
-
-		// begin from 1hun
-		for (int i = 1; i < sizeof(m_dFinalSanSeHun) / sizeof(m_dFinalSanSeHun[0]); ++i) {
-			loadTb(SanSe, i);
-		}
-		// load feng
-		for (int j = 0; j < sizeof(m_dFinalFengHun) / sizeof(m_dFinalFengHun[0]); ++j) {
-			loadTb(FengZi, j);
-		}
 	}
 
 	bool valid(Key key) {
@@ -181,7 +225,6 @@ public:
 		}
 		return key;
 	}
-	// todo
 	tbVec getKey(Key key) {
 		tbVec vec;
 		char buf[9];
@@ -199,11 +242,11 @@ public:
 				buf[i]++;
 			}
 		}
-		cout << "key:" << key << " buf:" << buf << endl;
-		for (int j = 0; j < vec.size(); ++j) {
-			cout << vec[j] << " ";
-		}
-		cout << "vec size:" << vec.size() << endl;
+//        cout << "key:" << key << " buf:" << buf << endl;
+//        for (int j = 0; j < vec.size(); ++j) {
+//            cout << vec[j] << " ";
+//        }
+//        cout << "vec size:" << vec.size() << endl;
 		return vec;
 	}
 
@@ -455,87 +498,73 @@ public:
 		}
 		return true;
 	}
-	bool is3N2(int *list, int len) {
-		int sum = accumulate(list, list + len, 0);
+	bool is3N2(int *list, int len, int hunCount) {
+		int sum = accumulate(list, list + len, hunCount);
 		if (sum % 3 != 2 || sum > 14) {
 			return false;
 		}
 		return true;
 	}
-	void splitJiang(int *list, int len, int *arrJiang) {
+	int splitFengJiang(int *list, int len, int *arrJiang) {
 		int j = 0;
 		for (int i = 0; i < len; ++i) {
-			if (list[i] >= 2 && j < 7) {
+			if (list[i] == 2 && j < 7) {    // 风牌的将必须 == 2
 				arrJiang[j] = i;    // save index i
 				j++;
 			}
 		}
+		return j;
 	}
-	void splitJiang(int *first, int *last, int *arrJiang) {
+	int splitJiang(int *first, int *last, int *arrJiang) {
 		int j = 0;
 		int i = 0;
 		while (first != last) {
-			if (*first >= 2 && j < 7) {
+			if (*first >= 2 && j < 7) {     // 三色牌将可以是 >= 2
 				arrJiang[j] = i;
 				++j;
 			}
 			++i;
 			++first;
 		}
+		return j;
 	}
-	bool checkFengSe(int *list, int len, int hunCount) {
-		int iteFeng, iteWan, iteTiao, iteTong;
-		iteFeng = iteWan = iteTiao = iteTong = 0;
-		int feng[7], wan[9], tiao[9], tong[9];
+	bool splitFengSe(int *list, int len, int hunCount) {
+		int feng[7];
 		memset(feng, 0, sizeof(feng));
-		memset(wan, 0, sizeof(wan));
-		memset(tiao, 0, sizeof(tiao));
-		memset(tong, 0, sizeof(tong));
-		for (int i = 0; i < len; ++i) {
-			if (list[i] < 0 || list[i] > 4) {
-				return false;
-			}
-			if (list[i] == 0) {
-				continue;
-			}
-			if (i >= 1 && i <= 7) {
-				feng[iteFeng] = list[i];
-				iteFeng++;
-			}
-			if (i >= 8 && i <= 16) {
-				wan[iteWan] = list[i];
-				iteWan++;
-			}
-			if (i >= 17 && i <= 25) {
-				tiao[iteTiao] = list[i];
-				iteTiao++;
-			}
-			if (i >= 26 && i <= 34) {
-				tong[iteTong] = list[i];
-				iteTong++;
-			}
-		}
-
-		if (iteFeng > 0) {
-			Key fKey = getKey(feng, sizeof(feng) / sizeof(feng[0]));
+		memcpy(feng, list+1, sizeof(feng));
+		if (accumulate(feng, feng + 7, 0) > 0) {
+			Key fKey = getKey(feng, 7);
 			if (!check(fKey, FengZi, hunCount)) {
 				return false;
 			}
 		}
-		if (iteWan > 0) {
-			Key wKey = getKey(wan, sizeof(wan) / sizeof(wan[0]));
+
+		int wan[9];
+		int size = sizeof(wan);
+		memset(wan, 0, sizeof(wan));
+		memcpy(wan, list+1+7, size);
+		if (accumulate(wan, wan + 9, 0) > 0) {
+			Key wKey = getKey(wan, 9);
 			if (!check(wKey, SanSe, hunCount)) {
 				return false;
 			}
 		}
-		if (iteTiao > 0) {
-			Key tiKey = getKey(tiao, sizeof(tiao) / sizeof(tiao[0]));
+
+		int tiao[9];
+		memset(tiao, 0, sizeof(tiao));
+		memcpy(tiao, list+1+7+9, size);
+		if (accumulate(tiao, tiao + 9, 0) > 0) {
+			Key tiKey = getKey(tiao, 9);
 			if (!check(tiKey, SanSe, hunCount)) {
 				return false;
 			}
 		}
-		if (iteTong > 0) {
-			Key tKey = getKey(tong, sizeof(tong) / sizeof(tong[0]));
+
+		int tong[9];
+		memset(tong, 0, sizeof(tong));
+		memcpy(tong, list+1+7+9+9, size);
+		if (accumulate(tong, tong + 9, 0) > 0) {
+			Key tKey = getKey(tong, 9);
 			if (!check(tKey, SanSe, hunCount)) {
 				return false;
 			}
@@ -543,32 +572,250 @@ public:
 
 		return true;
 	}
-	bool check(int *list, int len) {
-		// check 3n2
-		if (!is3N2(list, len)) {
-			return false;
-		}
+	bool checkSanSe(int *list, int len, int hunCount) {
+		int wanCount, tiaoCount, tongCount;
+		wanCount = tiaoCount = tongCount = 0;
 
-		// 过滤将牌
-		int arrJiang[7]; // 最多有7个将
-		memset(arrJiang, 0, sizeof(arrJiang));
-		splitJiang(list, list + len, arrJiang);
-		if (list[arrJiang[0]] < 2) {
-			// 如果满足3n2,arrJiang一定会被赋值
-			// 3n2 double check
-			return false;
-		}
-
-		// todo
-		int hunCount = 0;
-		// 检查去将后的牌
-		for (int i = 0; i < sizeof(arrJiang) / sizeof(arrJiang[0]); ++i) {
-			list[arrJiang[i]] -= 2; // 过滤将
-			if (checkFengSe(list, len, hunCount)) {
-				return true;
+		int wan[9];
+		int size = sizeof(wan);
+		memset(wan, 0, sizeof(wan));
+		memcpy(wan, list+1+7, size);
+		wanCount = accumulate(wan, wan + 9, 0);
+		if (wanCount > 0) {
+			int arrJiang[7];
+			memset(arrJiang, 0, sizeof(arrJiang));
+			int jiangCount = splitJiang(wan, wan + 7, arrJiang);
+			if (jiangCount <= 0) {
+				Key wKey = getKey(wan, 9);
+				int i = 0;
+				bool huFlag = false;
+				for (i ; i < hunCount+1; ++i) {
+					if (check(wKey, SanSe, i)) {
+						huFlag = true;
+						break;
+					}
+				}
+				// 分配所有混,依然不能胡
+				if (i == hunCount && !huFlag) {
+					return false;
+				}
+			} else {
+				if (wanCount - 2 > 0 ) {   // 当只有一个将时, arrJiang去掉两张牌为空,所以有此判断
+					int i = 0;
+					bool huFlag = false;
+					wan[arrJiang[0]] -= 2;
+					Key wKey = getKey(wan, 9);
+					for (i ; i < hunCount+1; ++i) {
+						if (check(wKey, SanSe, i)) {
+							huFlag = true;
+							break;
+						}
+					}
+					wan[arrJiang[0]] += 2;
+					// 分配所有混,依然不能胡
+					if (i == hunCount && !huFlag) {
+						return false;
+					}
+				}
 			}
-			list[arrJiang[i]] += 2;
 		}
+		return false;
+	}
+	bool checkHuHun(int *list, int len, int hunCount) {
+		int needHun = 0;
+		int fengCount, wanCount, tiaoCount, tongCount;
+		fengCount = wanCount = tiaoCount = tongCount = 0;
+
+		int feng[7];
+		memset(feng, 0, sizeof(feng));
+		memcpy(feng, list+1, sizeof(feng));
+		fengCount = accumulate(feng, feng + 7, 0);
+		if (fengCount > 0) {
+			int arrFengJiang[7];
+			memset(arrFengJiang, 0, sizeof(arrFengJiang));
+			int jiangCount = splitFengJiang(feng, 7, arrFengJiang);
+			if (jiangCount <= 0) {  // todo
+				/*风牌没有将,此时手牌风牌个数可能为1or3,如:(1,0,0,1), (1,1,0,0), (3,0,0,3),
+                  不可能是2or4,(Note:手牌有4个风不能胡)*/
+				Key fKey = getKey(feng, 7);
+				int i = 0;
+				bool huFlag = false;
+				for (i ; i < hunCount+1; ++i) {
+					if (check(fKey, FengZi, i)) {
+						needHun += i;
+						huFlag = true;
+						break;
+					}
+				}
+				// 分配所有混,依然不能胡
+				if (i > hunCount && !huFlag) {
+					return false;
+				}
+			} else { //(jiangCount >= 1) // 手牌可能为 1,2,2 || 2,0,2,1 || 2
+				if (fengCount - 2 > 0 ) {   // 当只有一个将时, arrFengJiang去掉两张牌为空,所以有此判断
+					int i = 0;
+					bool huFlag = false;
+					feng[arrFengJiang[0]] -= 2;
+					Key fKey = getKey(feng, 7);
+					for (i ; i < hunCount+1; ++i) {
+						if (check(fKey, FengZi, i)) {
+							needHun += i;
+							huFlag = true;
+							break;
+						}
+					}
+					feng[arrFengJiang[0]] += 2;
+					// 分配所有混,依然不能胡
+					if (i > hunCount && !huFlag) {
+						return false;
+					}
+				}
+			}
+		}
+
+		int wan[9];
+		memset(wan, 0, sizeof(wan));
+		memcpy(wan, list+1+7, sizeof(wan));
+		wanCount = accumulate(wan, wan + 9, 0);
+		if (wanCount > 0) {
+			int arrJiang[7];
+			memset(arrJiang, 0, sizeof(arrJiang));
+			int jiangCount = splitJiang(wan, wan + 7, arrJiang);
+			if (jiangCount <= 0) {  // 0,0,1, 0,0,0, 0,0,1 todo
+				Key wKey = getKey(wan, 9);
+				int i = 0;
+				bool huFlag = false;
+				for (i ; i < hunCount+1; ++i) {
+					if (check(wKey, SanSe, i)) {
+						needHun += i;
+						huFlag = true;
+						break;
+					}
+				}
+				// 分配所有混,依然不能胡
+				if (i > hunCount && !huFlag) {
+					return false;
+				}
+			} else {
+				if (wanCount - 2 > 0 ) {   // 当只有一个将时, arrJiang去掉两张牌为空,所以有此判断
+					int i = 0;
+					bool huFlag = false;
+					wan[arrJiang[0]] -= 2;
+					Key wKey = getKey(wan, 9);
+					for (i ; i < hunCount+1; ++i) {
+						if (check(wKey, SanSe, i)) {
+							needHun += i;
+							huFlag = true;
+							break;
+						}
+					}
+					wan[arrJiang[0]] += 2;
+					// 分配所有混,依然不能胡
+					if (i > hunCount && !huFlag) {
+						return false;
+					}
+				}
+			}
+		}
+
+		int tiao[9];
+		memset(tiao, 0, sizeof(tiao));
+		memcpy(tiao, list+1+7+9, sizeof(tiao));
+		tiaoCount = accumulate(tiao, tiao+ 9, 0);
+		if (tiaoCount > 0) {
+			int arrJiang[7];
+			memset(arrJiang, 0, sizeof(arrJiang));
+			int jiangCount = splitJiang(tiao, tiao + 7, arrJiang);
+			if (jiangCount <= 0) {
+				Key tKey = getKey(tiao, 9);
+				int i = 0;
+				bool huFlag = false;
+				for (i ; i < hunCount+1; ++i) {
+					if (check(tKey, SanSe, i)) {
+						needHun += i;
+						huFlag = true;
+						break;
+					}
+				}
+				// 分配所有混,依然不能胡
+				if (i > hunCount && !huFlag) {
+					return false;
+				}
+			} else {
+				if (tiaoCount - 2 > 0 ) {   // 当只有一个将时, arrJiang去掉两张牌为空,所以有此判断
+					int i = 0;
+					bool huFlag = false;
+					tiao[arrJiang[0]] -= 2;
+					Key tKey = getKey(tiao, 9);
+					for (i ; i < hunCount+1; ++i) {
+						if (check(tKey, SanSe, i)) {
+							needHun += i;
+							huFlag = true;
+							break;
+						}
+					}
+					tiao[arrJiang[0]] += 2;
+					// 分配所有混,依然不能胡
+					if (i > hunCount && !huFlag) {
+						return false;
+					}
+				}
+			}
+		}
+
+		int tong[9];
+		memset(tong, 0, sizeof(tong));
+		memcpy(tong, list+1+7+9+9, sizeof(tong));
+		tongCount = accumulate(tong, tong+ 9, 0);
+		if (tongCount> 0) {
+			int arrJiang[7];
+			memset(arrJiang, 0, sizeof(arrJiang));
+			int jiangCount = splitJiang(tong, tong + 7, arrJiang);
+			if (jiangCount <= 0) {
+				Key tKey = getKey(tong, 9);
+				int i = 0;
+				bool huFlag = false;
+				for (i ; i < hunCount+1; ++i) {
+					if (check(tKey, SanSe, i)) {
+						needHun += i;
+						huFlag = true;
+						break;
+					}
+				}
+				// 分配所有混,依然不能胡
+				if (i > hunCount && !huFlag) {
+					return false;
+				}
+			} else {
+				if (tongCount - 2 > 0 ) {   // 当只有一个将时, arrJiang去掉两张牌为空,所以有此判断
+					int i = 0;
+					bool huFlag = false;
+					tong[arrJiang[0]] -= 2;
+					Key tKey = getKey(tong, 9);
+					for (i ; i < hunCount+1; ++i) {
+						if (check(tKey, SanSe, i)) {
+							needHun += i;
+							huFlag = true;
+							break;
+						}
+					}
+					tong[arrJiang[0]] += 2;
+					// 分配所有混,依然不能胡
+					if (i > hunCount && !huFlag) {
+						return false;
+					}
+				}
+			}
+		}
+
+		if ( (fengCount + wanCount + tiaoCount + tongCount + hunCount) % 3 != 2 ) {
+			return false;
+		}
+
+		if (needHun <= hunCount) {
+			return true;
+		}
+
 		return false;
 	}
 private:
@@ -584,41 +831,40 @@ private:
 };
 
 void print_cards(int* cards) {
-	printf("%d ", cards[0]);
+	printf("%d, ", cards[0]);
 	for (int i = 1; i <= 7; ++i) {
 		printf("%d,", cards[i]);
 	}
-	printf(" ");
+	printf("  ");
 
 	for (int i = 8; i <= 16; ++i) {
 		printf("%d,", cards[i]);
 	}
-	printf(" ");
+	printf("  ");
 
 	for (int i = 17; i <= 25; ++i) {
 		printf("%d,", cards[i]);
 	}
-	printf(" ");
+	printf("  ");
 
 	for (int i = 26; i <= 34; ++i) {
 		printf("%d,", cards[i]);
 	}
-	printf(" ");
-
-	for (int i = 35; i <= 42; ++i) {
-		printf("%d,", cards[i]);
-	}
+//    printf("  ");
+//
+//    for (int i = 35; i <= 42; ++i) {
+//        printf("%d,", cards[i]);
+//    }
 
 	printf("\n");
 }
-void benchmark() {
-#define MAX_MJ_CODEARRAY 43
-	MjMapTbV2 tb;
-	tb.load();
+void benchmark(MjMapTbV2& tb) {
+#define MAX_MJ_CODEARRAY 35
 	int MAX_COUNT = 100 * 10000;
-	int GUI_NUM = 1;
 	int source[MAX_COUNT * 9 * MAX_MJ_CODEARRAY];
-	int allCards[144];
+	int allCards[136];
+	memset(source, 0, sizeof(source));
+	memset(allCards, 0, sizeof(allCards));
 	int code = 0;
 	for (int i = 0; i < 34; i++) {
 		allCards[i * 4] = code + 1;
@@ -627,30 +873,23 @@ void benchmark() {
 		allCards[i * 4 + 3] = code + 1;
 		code++;
 	}
-	allCards[135] = 35;
-	allCards[136] = 36;
-	allCards[137] = 37;
-	allCards[138] = 38;
-	allCards[139] = 39;
-	allCards[140] = 40;
-	allCards[141] = 41;
-	allCards[142] = 42;
-	allCards[143] = 43;
 
+	int hu = 0;
 	int total = 0;
-	srand(1);
-	cout << "====shuffle begin" << endl;
-
+	int hunCount = 4;
 	double timeUse = 0;
 	struct timeval start;
 	struct timeval end;
+	srand(1);
+	cout << "====shuffle begin" << endl;
+
 	gettimeofday(&start, NULL);
 	for (int n = 0; n < MAX_COUNT; ++n) {
 		random_shuffle(allCards, allCards + 136);
 		for (int i = 0; i < 9; ++i) { // 136/14 -> 9
 			int* cards = &source[total++ * MAX_MJ_CODEARRAY];
 			memset(cards, 0, MAX_MJ_CODEARRAY);
-			for (int j = i * 14; j < i * 14 + 14; j++)
+			for (int j = i * 14; j < i * 14 + 14 - hunCount; j++)
 				++cards[allCards[j]];
 		}
 	}
@@ -658,42 +897,134 @@ void benchmark() {
 	timeUse = end.tv_sec - start.tv_sec;
 	cout << "====shuffle end cost:" << timeUse << "s" << endl;
 
-	cout << "====begin check..." << endl;
+	cout << "====begin benchmark..." << endl;
 	// hu check
 	gettimeofday(&start, NULL);
-	int hu = 0;
 	for (int n = 0; n < total; ++n) {
 		//sleep(1);
-		//print_cards(source+n*43);
-		hu += tb.check(source + n * 43, 43);
+//        hu += tb.checkHu(source + n * 43, 43, hunCount);
+		if (tb.checkHu(source + n * MAX_MJ_CODEARRAY, MAX_MJ_CODEARRAY, hunCount)) {
+//            print_cards(source + n * MAX_MJ_CODEARRAY);
+			++hu;
+		} else {
+			//print_cards(source + n * MAX_MJ_CODEARRAY);
+		}
 	}
 	gettimeofday(&end, NULL);
 	timeUse = (end.tv_sec - start.tv_sec) * 1000 + (end.tv_usec - start.tv_usec) / 1000;
-	cout << "check " << MAX_COUNT << " hu:" << hu << " cost:" << timeUse << "ms" << endl;
-	cout << "====check end" << endl;
+	cout << "check:" << total/10000 << "w hun:" << hunCount << " hu:" << hu << " cost:" << timeUse << "ms" << endl;
+	cout << "====benchmark end" << endl;
 }
-
-int main(int argc, char **argv) {
-	MjMapTbV2 t;
-	t.load();
+void check(MjMapTbV2& t) {
+	cout << "====begin checkV1 ..." << endl;
 	// 原手牌格式
 	int cards[] = {
 			0,                            // 混个数
-			2, 3, 0, 0, 0, 0, 0,          // 风字牌1-7
-			0, 0, 1, 1, 1, 0, 0, 0, 0,    // 万8-16
-			0, 0, 0, 0, 0, 1, 1, 1, 0,    // 条17-25
-			0, 0, 0, 0, 1, 1, 1, 0, 0,    // 筒26-34
+			1, 0, 0, 0, 0, 0, 1,          // 风字牌1-7
+			0, 0, 0, 0, 0, 0, 0, 0, 0,    // 万8-16
+			0, 0, 0, 0, 0, 0, 3, 0, 0,    // 条17-25
+			0, 0, 0, 0, 0, 0, 0, 0, 0,    // 筒26-34
 			0, 0, 0, 0, 0, 0, 0, 0        // 花35-42
 	};
 
+	int hunCount = 4;
 	double timeUse = 0;
 	struct timeval start;
 	struct timeval end;
 	gettimeofday(&start, NULL);
-	bool hu = t.check(cards, sizeof(cards) / sizeof(cards[0]));
+	bool hu = t.checkHu(cards, sizeof(cards) / sizeof(cards[0]), hunCount);
 	gettimeofday(&end, NULL);
 	timeUse = (end.tv_sec - start.tv_sec) * 1000 * 1000 + (end.tv_usec - start.tv_usec);
-	cout << "check hu?:" << hu << " cost:" << timeUse << "us" << endl;
+	cout << "====checkV1 hu?:" << hu << " cost:" << timeUse << "us" << endl;
+}
+void checkV2(MjMapTbV2 &tb) {
+	cout << "====begin checkV2 ..." << endl;
+	vector<int> vec;
+	int cards[] = {
+//            0, 0,0,0,0,0,0,0,  0,0,0,1,1,1,0,0,0,  0,1,1,1,1,1,1,0,0,  0,1,1,1,0,0,0,0,0,  0,0,0,0,0,0,0,0,
+//            0, 0,0,0,0,0,0,0,  0,0,0,0,0,0,0,0,0,  1,1,1,3,0,1,1,1,0,  0,0,0,0,1,1,1,0,0,  0,0,0,0,0,0,0,0,
+//            0, 0,0,0,0,0,0,0,  1,2,2,1,0,0,0,0,0,  0,0,1,1,1,0,1,1,1,  0,0,0,0,0,0,0,0,0,  0,0,0,0,0,0,0,0,
+//            0, 0,0,0,0,0,0,0,  0,0,0,0,0,0,1,1,1,  0,0,0,0,1,1,1,0,0,  3,0,0,0,0,1,1,1,0,  0,0,0,0,0,0,0,0,
+//            0, 0,0,0,0,0,0,0,  0,1,2,2,1,0,0,0,0,  0,0,0,0,0,0,1,1,1,  2,0,0,0,0,0,1,1,1,  0,0,0,0,0,0,0,0,
+//            0, 0,0,0,0,0,0,0,  0,1,0,0,0,0,0,0,1,  0,0,1,0,0,0,0,1,0,  0,0,0,0,0,0,0,1,1,  0,0,0,0,0,0,0,0,
+			0, 0,0,0,0,0,0,0,  1,0,0,0,0,0,0,1,0,  0,0,1,0,0,0,0,1,0,  0,0,0,0,0,0,0,1,1, 0,0,0,0,0,0,0,0,  // 8混测试
+//            0, 0,0,0,0,0,0,0,  0,0,0,0,3,0,1,1,1,  1,1,1,0,0,0,0,0,0,  0,0,0,0,0,0,1,1,1,  0,0,0,0,0,0,0,0,
+//            0, 0,0,0,0,0,0,0,  0,0,0,0,0,0,0,0,0,  0,0,0,0,0,1,1,1,0,  3,1,1,1,0,0,1,1,1,  0,0,0,0,0,0,0,0,
+//            0, 0,0,0,0,0,0,0,  0,0,0,0,0,0,0,0,0,  3,0,1,2,2,1,0,0,0,  0,0,0,1,1,1,0,0,0,  0,0,0,0,0,0,0,0,
+//            0, 0,0,0,0,0,0,0,  0,0,0,0,0,0,1,1,1,  1,1,1,0,0,0,0,0,0,  0,0,1,1,1,0,1,1,1,  0,0,0,0,0,0,0,0,
+//            0, 0,0,0,0,0,0,0,  1,1,1,0,0,0,0,0,0,  0,1,1,1,0,1,1,1,0,  0,0,0,0,0,0,1,1,1,  0,0,0,0,0,0,0,0,
+//            0, 0,0,0,0,0,0,0,  0,0,0,0,0,1,1,1,0,  0,0,0,1,1,1,0,0,0,  0,1,1,1,0,1,1,1,0,  0,0,0,0,0,0,0,0,
+	};
+	int hu = 0;
+	int hunCount = 8;
+	for (int i = 0; i < sizeof(cards) / sizeof(cards[0]) / 43; ++i) {
+		if (tb.checkHu(cards + i*43, 35, hunCount)) {
+			print_cards(cards + i *43);
+			++hu;
+		}
+	}
+	cout << "====checkV2 hu:" << hu << endl;
+}
+void checkV3(MjMapTbV2 &t) {
+	cout << "====begin checkV3 ..." << endl;
+	char name[256];
+	sprintf(name, "tbl/table_%s.tbl", "test");
+	FILE *fp = fopen(name, "rb");
+	if (fp == NULL) {
+		cout << "can't load table:" << name << endl;
+		return;
+	}
+
+	map<string, bool> data;
+	char str[MAX_MJ_CODEARRAY];
+	memset(str, 0, sizeof(str));
+	int num = 0;
+	while (fscanf(fp, "%s\n", str) != EOF) {
+		string key = str;
+		data.insert(make_pair(key, true));
+		num++;
+		if(num >= 100*10000) {
+			break;
+		}
+	}
+	fclose(fp);
+
+	int hu = 0;
+	int hunCount = 4;
+	double timeUse = 0;
+	struct timeval start;
+	struct timeval end;
+	gettimeofday(&start, NULL);
+
+	map<string, bool>::iterator ite = data.begin();
+	for(ite; ite != data.end(); ++ite) {
+		int list[43];
+		memset(list, 0, sizeof(list));
+		string key = ite->first;
+		for (int i = 0; i < key.length(); ++i) {
+			string tmp;
+			tmp = key[i];
+			list[i] = atoi(tmp.c_str());
+		}
+		if(t.checkHu(list, 43, hunCount)) {
+			++hu;
+		} else {
+			//print_cards(list);
+		}
+		//int num = atoi(key.c_str());
+		//cout << "key:" << key << " num:" << num << endl;
+	}
+	cout << "Hu:" << hu << " mapSize:" << data.size() << endl;
+	gettimeofday(&end, NULL);
+	timeUse = (end.tv_sec - start.tv_sec) * 1000 + (end.tv_usec - start.tv_usec)/1000;
+	cout << "checkV3 hu?:" << hu << " cost:" << timeUse << "ms" << endl;
+}
+int main(int argc, char **argv) {
+	MjMapTbV2 t;
+	t.load();
+	check(t);
+//    checkV2(t);
+//    checkV3(t);
 
 	if (argc < 2) {
 		cout << "USAGE:\n"
@@ -712,7 +1043,7 @@ int main(int argc, char **argv) {
 	}
 	else if (tpe == 2) {
 		// benchmark
-		benchmark();
+		benchmark(t);
 		//int tmp;
 		//cin >> tmp;
 	}
