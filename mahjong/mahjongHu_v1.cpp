@@ -18,6 +18,12 @@ typedef map<Key,Val> tbMap;
 #define MAX_HUN_COUNT 8
 #define MAX_MJ_CODEARRAY 43
 
+/*
+ * 该版本穷举所有可胡牌型，加载到内存，根据当前手牌牌型，查表验证是否可胡
+ * 此版本只生成14张手牌，2、5、8、11张的时候尚未生成，
+ * 仅14张手牌生成表文件近600M(Map的Key用string也是导致表大的原因)
+ * 加载入内存需要近2G,所以该版本不是特别适用
+*/
 class MjMapTb {
 public:
     MjMapTb(){}
