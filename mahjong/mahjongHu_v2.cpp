@@ -13,6 +13,13 @@
 #include <numeric>  // accumulate
 using namespace std;
 
+/*
+ * 该版本拆分风字、三色牌，穷举风字、单色牌所有可胡牌型
+ * 加入混儿判断后，当风字or三色牌没混儿时，
+ * 获取所需最少混个数错误,
+ * 比如风字牌:1,0,0,0,0,1,0 此时所需最少3个混即可胡
+ * 该版本返回4个混儿才能胡
+*/
 class MjMapTbV2 {
 private:
 #define MAX_HUN_COUNT 8
