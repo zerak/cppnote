@@ -7,7 +7,7 @@
 class HuLib
 {
 public:
-    static bool get_hu_info(char* const hand_cards, char cur_card, int gui_index);
+    static bool get_hu_info(char* const hand_cards, int gui_num);
 private:
 	static bool split(char* const cards, int gui_num);
 	static int _split(char* const cards, int gui_num, int min, int max, bool chi, int& eye_num);

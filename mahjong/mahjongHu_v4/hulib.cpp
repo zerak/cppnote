@@ -2,25 +2,16 @@
 #include "table_mgr.h"
 #include <string.h>
 
-bool HuLib::get_hu_info(char* cards, char cur_card, int gui_index) {
-	int gui_num = 0;
-	if (cur_card != 34)
-		++cards[cur_card];
-	if (gui_index != 34)
-		gui_num = cards[gui_index];
-	
-	cards[gui_index] = 0;
-
-	bool hu = split(cards, gui_num);
-	if (gui_index != 34)
-		cards[gui_index] = gui_num;
-	if (cur_card != 34)
-		--cards[cur_card];
-	return hu;
+bool HuLib::get_hu_info(char* cards, int gui_num) {
+    if (gui_num > MAX_GUI_NUM) {
+        gui_num = MAX_GUI_NUM;
+	}
+	return split(cards, gui_num);
 }
 
 bool check(int gui, int eye_num, int gui_num, int& gui_sum) {
-	if (gui < 0) return false;
+	if (gui < 0)
+		return false;
 
 	gui_sum += gui;
 	if (gui_sum > gui_num)
@@ -60,7 +51,7 @@ bool HuLib::split(char* const cards, int gui_num) {
 	return true;
 }
 
-int HuLib::_split(char* const cards, int gui_num, int min, int max, bool chi, int& eye_num) {
+int HuLib::_split(char* const cards, int gui_num, int min, int max, bool sanSe, int& eye_num) {
     int key = 0;
     int num = 0;
 
@@ -74,10 +65,12 @@ int HuLib::_split(char* const cards, int gui_num, int min, int max, bool chi, in
 
 	for (int i = 0; i <= gui_num; ++i) {
 		int yu = (num + i) % 3;
-		if (yu == 1) continue;
+		if (yu == 1)
+			continue;
 		bool eye = (yu == 2);
-		if (TableMgr::check(key, i, eye, chi)) {
-			if (eye) eye_num++;
+		if (TableMgr::check(key, i, eye, sanSe)) {
+			if (eye)
+				eye_num++;
 			return i;
 		}
 	}

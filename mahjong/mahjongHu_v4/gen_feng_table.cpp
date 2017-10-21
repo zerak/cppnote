@@ -66,7 +66,9 @@ static void parse_table(int cards[], bool eye) {
 
 void gen_auto_table_sub(int cards[], int level, bool eye) {
     for(int i=0;i<7;++i) {
-        if(cards[i] > 3) continue;
+        if(cards[i] > 3)
+            continue;
+
         cards[i] += 3;
 
         parse_table(cards, eye);
@@ -98,6 +100,7 @@ int main() {
     gen_table();
     gen_eye_table();
     TableMgr::dump_feng_table();
+    printf("generate feng table end...\n");
 
     return 0;
 }

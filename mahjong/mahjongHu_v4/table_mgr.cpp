@@ -1,6 +1,7 @@
 #include "table_mgr.h"
 #include "set_table.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 #define TABLECLASS SetTable
 
@@ -45,9 +46,9 @@ void TableMgr::destroy() {
     }
 }
 
-bool TableMgr::check(int key, int gui_num, bool eye, bool chi) {
+bool TableMgr::check(int key, int gui_num, bool eye, bool sanSe) {
     Table* tbl = 0;
-    if(chi) {
+    if(sanSe) {
         if(eye) {
             tbl = m_check_eye_table[gui_num];
         } else {
@@ -144,5 +145,5 @@ bool TableMgr::dump_feng_table() {
 }
 
 bool TableMgr::gen() {
-
+    return true;
 }
