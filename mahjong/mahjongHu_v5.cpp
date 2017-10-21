@@ -202,8 +202,7 @@ private:
 	}
 	bool check_add(int *cards, int hunNum, bool hasJiang, MjType tpe) {
 		int key = 0;
-		int len = (tpe == FengZi) ? 7 : 9;
-		for (int i = 0; i < len; i++) {
+		for (int i = 0; i < 9; i++) {
 			key = key * 10 + cards[i];
 		}
 
@@ -217,7 +216,7 @@ private:
 		}
 		testMap[key] = true;
 
-		for (int i = 0; i < len; i++) {
+		for (int i = 0; i < 9; i++) {
 			if (cards[i] > 4) {
 				return true;
 			}
