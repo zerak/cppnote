@@ -1,11 +1,6 @@
 
-//#include <stdlib.h> // itoa
-#include <stdio.h>
-#include <unistd.h> // sleep
-#include <cstdlib>	// srand
 #include <iostream>
 #include <string.h>
-#include <algorithm>
 #include <map>
 #include <sys/time.h>
 using namespace std;
@@ -23,7 +18,7 @@ public:
 
 public:
 	void init() {
-		// init table gen data
+		// gen table data
 		genMap();
 
 		// dump table
@@ -48,30 +43,22 @@ public:
 		for (int i = 0; i < MAX_HUN_COUNT+1; ++i ) {
 			cout << "sanseJiang hun:" << i << " size:" << m_dFinalSanSeJiang[i].size() << endl;
 		}
-		return;
-	}
-	void load() {
-		// load table
-		for (int i = 0; i < MAX_HUN_COUNT; ++i) {
-			loadTb(FengZi, i, true);
-			loadTb(FengZi, i, false);
 
-			loadTb(SanSe, i, true);
-			loadTb(SanSe, i, false);
-		}
+        cleanTestData();
+		return;
 	}
 
 	// handList: 当前手牌
 	// len: handList长度
-	// mjCcodeIdx: 最后拿的牌index
-	// hunCount: 混个数
-	bool checkHu(int *handList, int len) {
-		int hunCount = handList[0];
-		return false;
+	bool checkHu(char* handList, int len) {
+		int hunNum = handList[0];
+		if (hunNum > MAX_HUN_COUNT) {
+			hunNum = MAX_HUN_COUNT;
+		}
+		return split(handList + 1, hunNum);
 	}
 
 private:
-public: // todo
 	enum MjType {
 		SanSe = 0,
 		FengZi = 1
@@ -83,6 +70,82 @@ public: // todo
 		coTong = 3,
 		coMax = 4
 	};
+
+	bool check(int hunNeed, int jiangNum, int hunNum, int& hunSum) {
+		if (hunNeed < 0)
+			return false;
+
+		hunSum += hunNeed;
+		if (hunSum > hunNum)
+			return false;
+
+		if (jiangNum == 0)
+			return true;
+
+		return hunSum + (jiangNum - 1) <= hunNum;
+	}
+	bool split(char* const cards, int hunNum) {
+		int jiangNum = 0;
+        int hunSum = 0;
+		int hunNeed = 0;
+
+		hunNeed = _split(cards, hunNum, 0, 6, false, jiangNum);
+		if (!check(hunNeed, jiangNum, hunNum, hunSum))
+			return false;
+
+		hunNeed = _split(cards, hunNum - hunSum, 7, 15, true, jiangNum);
+		if (!check(hunNeed, jiangNum, hunNum, hunSum))
+			return false;
+
+		hunNeed = _split(cards, hunNum - hunSum, 16, 24, true, jiangNum);
+		if (!check(hunNeed, jiangNum, hunNum, hunSum))
+			return false;
+
+		hunNeed = _split(cards, hunNum - hunSum, 25, 33, true, jiangNum);
+		if (!check(hunNeed, jiangNum, hunNum, hunSum))
+			return false;
+
+		if (jiangNum == 0) {
+			return hunSum + 2 <= hunNum;
+		}
+
+		return true;
+	}
+	int _split(char* const cards, int hunNum, int min, int max, bool isSanSe, int& jiangNum) {
+		int key = 0;
+		int num = 0;
+
+		MjType tpe = isSanSe ? SanSe : FengZi;
+
+		for(int i = min; i <= max; ++i) {
+			key = key*10 + cards[i];
+			num = num + cards[i];
+		}
+
+		if (num == 0)
+			return 0;
+
+		for (int i = 0; i <= hunNum; ++i) {
+			int yu = (num + i) % 3;
+			if (yu == 1)
+				continue;
+			bool hasJiang = (yu == 2);
+			if (isHu(key, i, hasJiang, tpe)) {
+				if (hasJiang)
+					jiangNum++;
+				return i;
+			}
+		}
+
+		return -1;
+	}
+	bool isHu(int key, int hunNum, bool hasJiang, MjType tpe) {
+        tbMap &d = getMap(tpe, hunNum, hasJiang);
+		if (d.find(key) == d.end()) {
+			return false;
+		}
+		return true;
+	}
 
 	Val getVal() {
 		return Val(true);
@@ -103,6 +166,21 @@ public: // todo
 			}
 		}
 	}
+	tbMap& getTestMap(MjType tpe, int hunNum, bool hasJiang) {
+		if (hasJiang) {
+			if (tpe == SanSe) {
+				return m_dSanSeJiangTest[hunNum];
+			} else {
+				return m_dFengJiangTest[hunNum];
+			}
+		} else {
+			if (tpe == SanSe) {
+				return m_dSanSeTest[hunNum];
+			} else {
+				return m_dFengTest[hunNum];
+			}
+		}
+	}
 
 	void dumpFor(tbMap &tbl, string name) {
 		FILE *fp = fopen(name.c_str(), "wb+");
@@ -119,15 +197,12 @@ public: // todo
 	}
 
 	bool add(tbMap &tm, Key &key, Val &val) {
-		tbMap::iterator ite = tm.find(key);
-		if (ite != tm.end()) {
-			return false;
-		}
 		tm.insert(make_pair(key, val));
 		return true;
 	}
-	bool check_add(int *cards, int len, int hunNum, bool hasJiang, MjType tpe) {
+	bool check_add(int *cards, int hunNum, bool hasJiang, MjType tpe) {
 		int key = 0;
+		int len = (tpe == FengZi) ? 7 : 9;
 		for (int i = 0; i < len; i++) {
 			key = key * 10 + cards[i];
 		}
@@ -135,6 +210,12 @@ public: // todo
 		if (key == 0) {
 			return false;
 		}
+
+		tbMap &testMap = getTestMap(tpe, hunNum, hasJiang);
+		if(testMap.find(key) != testMap.end()){
+			return false;
+		}
+		testMap[key] = true;
 
 		for (int i = 0; i < len; i++) {
 			if (cards[i] > 4) {
@@ -145,33 +226,33 @@ public: // todo
 		Val val = getVal();
 		return add(getMap(tpe, hunNum, hasJiang), key, val);
 	}
-	void parse_table_sub(int *cards, int len, int hunNum, bool hasJiang, MjType tpe) {
-		for (int i = 0; i < len; i++) {
+	void parse_table_sub(int *cards, int hunNum, bool hasJiang, MjType tpe) {
+		for (int i = 0; i < 9; i++) {
 			if (cards[i] == 0) {
 				continue;
 			}
 
 			cards[i]--;
 
-			if (!check_add(cards, len, hunNum, hasJiang, tpe)) {
+			if (!check_add(cards, hunNum, hasJiang, tpe)) {
 				cards[i]++;
 				continue;
 			}
 
 			if (hunNum < MAX_HUN_COUNT) {
-				parse_table_sub(cards, len, hunNum + 1, hasJiang, tpe);
+				parse_table_sub(cards, hunNum + 1, hasJiang, tpe);
 			}
 			cards[i]++;
 		}
 	}
-	void parse_table(int *cards, int len, bool hasJiang, MjType tpe) {
-		if (!check_add(cards, len, 0, hasJiang, tpe)) {
+	void parse_table(int *cards, bool hasJiang, MjType tpe) {
+		if (!check_add(cards, 0, hasJiang, tpe)) {
 			return;
 		}
-//		parse_table_sub(cards, len, 1, hasJiang,tpe);
+		parse_table_sub(cards, 1, hasJiang,tpe);
 	}
 
-	void genSanSeSub(int *cards, int len, int level, bool hasJiang) {
+	void genSanSeSub(int *cards, int level, bool hasJiang) {
 		for(int i = 0; i < 16; ++i) {
 			if(i <= 8) {
 				if(cards[i] > 3)
@@ -186,9 +267,9 @@ public: // todo
 				cards[index+2] += 1;
 			}
 
-			parse_table(cards, len, hasJiang, SanSe);
+			parse_table(cards, hasJiang, SanSe);
 			if(level < 4) {
-				genSanSeSub(cards, len, level + 1, hasJiang);
+				genSanSeSub(cards, level + 1, hasJiang);
 			}
 
 			if(i <= 8) {
@@ -203,21 +284,20 @@ public: // todo
 	}
 	void genSanSeKeShun() {
 		int cards[34] = {0};
-		genSanSeSub(cards, 9, 1, false);
+		genSanSeSub(cards, 1, false);
 	}
 	void genSanSeJiangKeShun() {
 		int cards[34] = {0};
 		for(int i = 0; i < 9; ++i) {
-			cout << "jiang No." << i << endl;
 			cards[i] = 2;
-			parse_table(cards, 9, true, SanSe);
-			genSanSeSub(cards, 9, 1, true);
+			parse_table(cards, true, SanSe);
+			genSanSeSub(cards, 1, true);
 			cards[i] = 0;
 		}
 	}
 	void genSanSeMap() {
 		cout << "begin gen sanse ke/shun..." << endl;
-		genSanSeKeShun();	// todo
+		genSanSeKeShun();
 		cout << "sanse ke/shun gen end" << endl;
 
 		cout << "begin gen sanse jiang + ke/shun..." << endl;
@@ -225,30 +305,30 @@ public: // todo
 		cout << "sanse jiang + ke/shun gen end" << endl;
 	}
 
-	void genFengSub(int *cards, int len, int level, bool hasJiang) {
-		for(int i=0; i < len; ++i) {
+	void genFengSub(int *cards, int level, bool hasJiang) {
+		for(int i=0; i < 7; ++i) {
 			if(cards[i] > 3)
 				continue;
 
 			cards[i] += 3;
 
-			parse_table(cards, len, hasJiang, FengZi);
+			parse_table(cards, hasJiang, FengZi);
 			if(level<4) {
-				genFengSub(cards, len, level + 1, hasJiang);
+				genFengSub(cards, level + 1, hasJiang);
 			}
 			cards[i] -= 3;
 		}
 	}
 	void genFengKe() {
-		int card[7] = {0};
-		genFengSub(card, 7, 1, false);
+		int card[34] = {0};
+		genFengSub(card, 1, false);
 	}
 	void genFengJiangKe() {
-		int cards[7] = {0};
+		int cards[34] = {0};
 		for(int i=0; i<7; ++i) {
 			cards[i] = 2;
-			parse_table(cards, 7, true, FengZi);
-			genFengSub(cards, 7, 1, true);
+			parse_table(cards, true, FengZi);
+			genFengSub(cards, 1, true);
 			cards[i] = 0;
 		}
 	}
@@ -266,13 +346,13 @@ public: // todo
 		double timeUse = 0;
 		struct timeval start, end;
 		gettimeofday(&start, NULL);
-		genSanSeMap();		// san se map
+		genSanSeMap();	// san se map
 		gettimeofday(&end, NULL);
 		timeUse = end.tv_sec - start.tv_sec;
 		cout << "gen sanse map cost:" << timeUse << "s" << endl;
 
 		gettimeofday(&start, NULL);
-//		genFengMap();	// feng map	todo
+		genFengMap();	// feng map
 		gettimeofday(&end, NULL);
 		timeUse = end.tv_sec - start.tv_sec;
 		cout << "gen feng map cost:" << timeUse << "s" << endl;
@@ -286,17 +366,22 @@ public: // todo
 		return str;
 	}
 	string getTbName(MjType tpe, int hunNum, bool hasJiang) {
-		if (tpe == SanSe) {
-			if(hasJiang) {
-				return "tbl/table_sanse_jiang_" + itos(hunNum);
-			}
-			return "tbl/table_sanse_" + itos(hunNum);
-		} else {
-			if (hasJiang) {
-				return "tbl/table_feng_jiang_" + itos(hunNum);
-			}
-			return "tbl/table_feng_" + itos(hunNum);
-		}
+        string name = "";
+        if (tpe == SanSe) {
+            if(hasJiang) {
+                name = "tbl/table_sanse_jiang_" + itos(hunNum);
+            } else {
+                name = "tbl/table_sanse_" + itos(hunNum);
+            }
+        } else {
+            if (hasJiang) {
+                name = "tbl/table_feng_jiang_" + itos(hunNum);
+            } else {
+                name = "tbl/table_feng_" + itos(hunNum);
+            }
+        }
+        name += ".tbl";
+        return name;
 	}
 	bool loadTb(MjType tpe, int hunNum, bool hasJiang) {
 		string name = getTbName(tpe, hunNum, hasJiang);
@@ -317,15 +402,42 @@ public: // todo
 		fclose(fp);
 		return true;
 	}
+    void load() {
+        // load table
+        for (int i = 0; i < MAX_HUN_COUNT; ++i) {
+            loadTb(FengZi, i, true);
+            loadTb(FengZi, i, false);
+
+            loadTb(SanSe, i, true);
+            loadTb(SanSe, i, false);
+        }
+    }
+
+	void cleanTestData() {
+		for (int i = 0; i < MAX_HUN_COUNT + 1; ++i) {
+			m_dSanSeTest[i].clear();
+			m_dSanSeJiangTest[i].clear();
+			m_dFengTest[i].clear();
+			m_dFengJiangTest[i].clear();
+		}
+	}
+
 private:
 	tbMap m_dFinalSanSe[MAX_HUN_COUNT+1];		// 最终存放带混三色数据
 	tbMap m_dFinalSanSeJiang[MAX_HUN_COUNT+1];	// 最终存放带将、混三色数据
 
 	tbMap m_dFinalFeng[MAX_HUN_COUNT+1];		// 最终存放带混风字数据
 	tbMap m_dFinalFengJiang[MAX_HUN_COUNT+1];	// 最终存放带将、混风字数据
+
+    // 测试Map，用于临时生成检测Key
+	// 生成数据后清理
+    tbMap m_dSanSeTest[MAX_HUN_COUNT+1];
+	tbMap m_dSanSeJiangTest[MAX_HUN_COUNT+1];
+    tbMap m_dFengTest[MAX_HUN_COUNT+1];
+	tbMap m_dFengJiangTest[MAX_HUN_COUNT+1];
 };
 
-void print_cards(int* cards) {
+void print_cards(char* cards) {
 	printf("%d, ", cards[0]);
 	for (int i = 1; i <= 7; ++i) {
 		printf("%d,", cards[i]);
@@ -355,8 +467,8 @@ void print_cards(int* cards) {
 }
 void benchmark(MjMapTbV5& tb) {
 #define MAX_MJ_CODEARRAY 35
-	int MAX_COUNT = 100 * 10000;
-	int source[MAX_COUNT * 9 * MAX_MJ_CODEARRAY];
+	int MAX_COUNT = 10 * 10000;
+	char source[MAX_COUNT * 9 * MAX_MJ_CODEARRAY];
 	int allCards[136];
 	memset(source, 0, sizeof(source));
 	memset(allCards, 0, sizeof(allCards));
@@ -382,7 +494,7 @@ void benchmark(MjMapTbV5& tb) {
 	for (int n = 0; n < MAX_COUNT; ++n) {
 		random_shuffle(allCards, allCards + 136);
 		for (int i = 0; i < 9; ++i) { // 136/14 -> 9
-			int* cards = &source[total++ * MAX_MJ_CODEARRAY];
+			char* cards = &source[total++ * MAX_MJ_CODEARRAY];
 			memset(cards, 0, MAX_MJ_CODEARRAY);
 			for (int j = i * 14; j < i * 14 + 14 - hunCount; j++)
 				++cards[allCards[j]];
@@ -400,7 +512,7 @@ void benchmark(MjMapTbV5& tb) {
 		//sleep(1);
 //        hu += tb.checkHu(source + n * 43, 43, hunCount);
 		if (tb.checkHu(source + n * MAX_MJ_CODEARRAY, MAX_MJ_CODEARRAY)) {
-//            print_cards(source + n * MAX_MJ_CODEARRAY);
+            //print_cards(source + n * MAX_MJ_CODEARRAY);
 			++hu;
 		} else {
 			//print_cards(source + n * MAX_MJ_CODEARRAY);
@@ -414,10 +526,10 @@ void benchmark(MjMapTbV5& tb) {
 void checkV1(MjMapTbV5& t) {
 	cout << "====begin checkV1 ..." << endl;
 	// 原手牌格式
-	int cards[] = {
-			3,                            // 混个数
-			1, 0, 0, 0, 0, 0, 1,          // 风字牌1-7
-			0, 0, 0, 0, 0, 0, 0, 0, 3,    // 万8-16
+	char cards[] = {
+			5,                            // 混个数
+			1, 1, 0, 0, 0, 0, 2,          // 风字牌1-7
+			0, 0, 0, 0, 0, 0, 0, 0, 0,    // 万8-16
 			0, 0, 0, 0, 0, 0, 3, 0, 3,    // 条17-25
 			0, 0, 0, 0, 0, 0, 0, 0, 0,    // 筒26-34
 			0, 0, 0, 0, 0, 0, 0, 0        // 花35-42
@@ -430,13 +542,15 @@ void checkV1(MjMapTbV5& t) {
 	bool hu = t.checkHu(cards, sizeof(cards) / sizeof(cards[0]));
 	gettimeofday(&end, NULL);
 	timeUse = (end.tv_sec - start.tv_sec) * 1000 * 1000 + (end.tv_usec - start.tv_usec);
-	cout << "====checkV1 hu?:" << hu << " cost:" << timeUse << "us" << endl;
+	cout << "====checkV1 hu:" << (hu == 1 ? "Yes" : "No") << " cost:" << timeUse << "us" << endl;
 }
+
 int main(int argc, char **argv) {
 	MjMapTbV5 t;
 	t.init();
-	int a;
-	cin >> a;
+    //t.load();
+
+	checkV1(t);
 
 	if (argc < 2) {
 		cout << "USAGE:\n"
@@ -447,13 +561,13 @@ int main(int argc, char **argv) {
 	int tpe = atoi(argv[1]);
 	if (tpe == 1) {
 		benchmark(t);
-		//int tmp;
-		//cin >> tmp;
-	}
-	else {
+	} else {
 		cout << "arg err check usage." << endl;
 		cout << "1,benchmark." << endl;
 	}
+
+	int a;
+	cin >> a;
 
 	return 0;
 }

@@ -3,3 +3,6 @@
 *.stackdump
 *.iml
 cmake-build-debug
+*.dSYM
+*.DS_Store
+tbl/

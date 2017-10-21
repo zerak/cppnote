@@ -38,10 +38,14 @@ void print_cards(char* cards) {
 
 void test_hu() {
 	char cards[] = {
-		1,0,1,0,0,2,0,2,0,
-		1,1,1,0,0,3,0,0,0,
-		0,0,0,0,0,0,0,0,0,
-		0,0,0,0,0,0,0
+//		1,0,1,0,0,2,0,2,0,
+//		1,1,1,0,0,3,0,0,0,
+//		0,0,0,0,0,0,0,0,0,
+//		0,0,0,0,0,0,0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0,    // 万8-16
+		0, 0, 0, 0, 0, 0, 3, 0, 3,    // 条17-25
+		0, 0, 0, 0, 0, 0, 0, 0, 0,    // 筒26-34
+		1, 1, 0, 0, 0, 0, 2,          // 风字牌1-7
 	};
 	int hu = 0;
 	double timeUse = 0;
@@ -49,7 +53,7 @@ void test_hu() {
 	struct timeval end;
 	gettimeofday(&start, NULL);
 	for (int i = 0; i < 1; i++){
-		hu += HuLib::get_hu_info(cards, 2);
+		hu += HuLib::get_hu_info(cards, 5);
 	}
 	gettimeofday(&end, NULL);
 	timeUse = (end.tv_sec - start.tv_sec) * 1000 * 1000 + (end.tv_usec - start.tv_usec);
@@ -60,7 +64,8 @@ int main(int argc, char **argv) {
 	TableMgr::init();
 	TableMgr::load();
 
-//	test_hu();
+	test_hu();
+	return 0;
 
 	int guiNum = 4;
 	if(argc >= 2) {

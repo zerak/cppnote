@@ -173,6 +173,7 @@ int main() {
     gettimeofday(&end, 0);
     timeUse = (end.tv_sec - start.tv_sec) * 1000 * 1000 + (end.tv_usec-start.tv_usec);
     cout << "gen 0 map cost:" << timeUse << "us" << endl;
+    TableMgr::dump_table();
 
     gettimeofday(&start, 0);
     genSanSeKeShun();
@@ -181,7 +182,8 @@ int main() {
     timeUse = (end.tv_sec - start.tv_sec) * 1000 * 1000 + (end.tv_usec-start.tv_usec);
     cout << "gen 1 map cost:" << timeUse << "us" << endl;
 
-    TableMgr::dump_feng_table();
+//    cin >> timeUse;
+//    TableMgr::dump_feng_table();
 //    printf("generate feng table end...\n");
 
     return 0;

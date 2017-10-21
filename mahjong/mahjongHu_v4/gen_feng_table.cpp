@@ -10,8 +10,9 @@ using namespace std;
 std::map<int, bool> gui_tested[9];
 std::map<int, bool> gui_eye_tested[9];
 
-bool check_add(int cards[], int gui_num, bool eye) {
+bool check_add(int cards[], int gui_num, bool eye, int tpe) {
     int key = 0;
+    int len = (tpe == 1) ? 7 : 9;
     for (int i=0; i<9; i++) {
         key = key * 10 + cards[i];
     }
@@ -49,7 +50,7 @@ void parse_table_sub(int cards[], int num, bool eye) {
 
         cards[i]--;
 
-        if (!check_add(cards, num, eye)) {
+        if (!check_add(cards, num, eye, 1)) {
             cards[i]++;
             continue;
         }
@@ -62,7 +63,7 @@ void parse_table_sub(int cards[], int num, bool eye) {
 }
 
 void parse_table(int cards[], bool eye) {
-    if (!check_add(cards, 0, eye)) {
+    if (!check_add(cards, 0, eye, 1)) {
         return;
     }
     parse_table_sub(cards, 1, eye);
@@ -146,10 +147,12 @@ int main() {
     timeUse = (end.tv_sec - start.tv_sec) * 1000 * 1000 + (end.tv_usec-start.tv_usec);
     cout << "gen 1 map cost:" << timeUse << "us" << endl;
 
-
+    cin >> timeUse;
 
     TableMgr::dump_feng_table();
 //    printf("generate feng table end...\n");
 
     return 0;
 }
+
+
