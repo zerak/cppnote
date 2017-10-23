@@ -53,6 +53,17 @@ public:
 
 	// handList: 当前手牌
 	// len: handList长度
+	/*
+		手牌格式
+		int cards[35] = {			  // 仅处理前35个字节
+		0,                            // 混个数
+		1, 0, 0, 0, 0, 0, 1,          // 风字牌1-7
+		0, 0, 0, 0, 0, 0, 0, 0, 0,    // 万8-16
+		0, 0, 0, 0, 0, 0, 3, 0, 0,    // 条17-25
+		0, 0, 0, 0, 0, 0, 0, 0, 0,    // 筒26-34
+		0, 0, 0, 0, 0, 0, 0, 0        // 花35-42
+		};
+	*/
 	bool checkHu(char* handList, int len) {
 		int hunNum = handList[0];
 		if (hunNum > MAX_HUN_COUNT) {
