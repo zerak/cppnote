@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
     }
     int from = atoi(argv[1]);
     int choose = atoi(argv[2]);
-    cout << "choose:" << choose << " from:" << from << endl;
+    cout << "from:" << from << " choose:" << choose << endl;
     chooseFrom(choose, from);
     return 0;
 }

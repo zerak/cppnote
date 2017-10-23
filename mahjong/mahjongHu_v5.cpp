@@ -1,4 +1,7 @@
 
+#include <stdio.h>		// file op
+#include <cstdlib>		// srand
+#include <algorithm>	// random_shuffle
 #include <iostream>
 #include <string.h>
 #include <map>
@@ -44,7 +47,7 @@ public:
 			cout << "sanseJiang hun:" << i << " size:" << m_dFinalSanSeJiang[i].size() << endl;
 		}
 
-        cleanTestData();
+        cleanTmpData();
 		return;
 	}
 
@@ -166,18 +169,18 @@ private:
 			}
 		}
 	}
-	tbMap& getTestMap(MjType tpe, int hunNum, bool hasJiang) {
+	tbMap& getTmpMap(MjType tpe, int hunNum, bool hasJiang) {
 		if (hasJiang) {
 			if (tpe == SanSe) {
-				return m_dSanSeJiangTest[hunNum];
+				return m_dSanSeJiangTmp[hunNum];
 			} else {
-				return m_dFengJiangTest[hunNum];
+				return m_dFengJiangTmp[hunNum];
 			}
 		} else {
 			if (tpe == SanSe) {
-				return m_dSanSeTest[hunNum];
+				return m_dSanSeTmp[hunNum];
 			} else {
-				return m_dFengTest[hunNum];
+				return m_dFengTmp[hunNum];
 			}
 		}
 	}
@@ -210,11 +213,11 @@ private:
 			return false;
 		}
 
-		tbMap &testMap = getTestMap(tpe, hunNum, hasJiang);
-		if(testMap.find(key) != testMap.end()){
+		tbMap &tmpMap = getTmpMap(tpe, hunNum, hasJiang);
+		if(tmpMap.find(key) != tmpMap.end()){
 			return false;
 		}
-		testMap[key] = true;
+		tmpMap[key] = true;
 
 		for (int i = 0; i < 9; i++) {
 			if (cards[i] > 4) {
@@ -412,12 +415,12 @@ private:
         }
     }
 
-	void cleanTestData() {
+	void cleanTmpData() {
 		for (int i = 0; i < MAX_HUN_COUNT + 1; ++i) {
-			m_dSanSeTest[i].clear();
-			m_dSanSeJiangTest[i].clear();
-			m_dFengTest[i].clear();
-			m_dFengJiangTest[i].clear();
+			m_dSanSeTmp[i].clear();
+			m_dSanSeJiangTmp[i].clear();
+			m_dFengTmp[i].clear();
+			m_dFengJiangTmp[i].clear();
 		}
 	}
 
@@ -428,12 +431,12 @@ private:
 	tbMap m_dFinalFeng[MAX_HUN_COUNT+1];		// 最终存放带混风字数据
 	tbMap m_dFinalFengJiang[MAX_HUN_COUNT+1];	// 最终存放带将、混风字数据
 
-    // 测试Map，用于临时生成检测Key
+    // 临时Map，用于临时生成检测Key
 	// 生成数据后清理
-    tbMap m_dSanSeTest[MAX_HUN_COUNT+1];
-	tbMap m_dSanSeJiangTest[MAX_HUN_COUNT+1];
-    tbMap m_dFengTest[MAX_HUN_COUNT+1];
-	tbMap m_dFengJiangTest[MAX_HUN_COUNT+1];
+    tbMap m_dSanSeTmp[MAX_HUN_COUNT+1];
+	tbMap m_dSanSeJiangTmp[MAX_HUN_COUNT+1];
+    tbMap m_dFengTmp[MAX_HUN_COUNT+1];
+	tbMap m_dFengJiangTmp[MAX_HUN_COUNT+1];
 };
 
 void print_cards(char* cards) {
@@ -466,7 +469,7 @@ void print_cards(char* cards) {
 }
 void benchmark(MjMapTbV5& tb) {
 #define MAX_MJ_CODEARRAY 35
-	int MAX_COUNT = 10 * 10000;
+	int MAX_COUNT = 100 * 10000;
 	char source[MAX_COUNT * 9 * MAX_MJ_CODEARRAY];
 	int allCards[136];
 	memset(source, 0, sizeof(source));
