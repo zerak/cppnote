@@ -417,7 +417,7 @@ private:
 	}
     void load() {
         // load table
-        for (int i = 0; i < MAX_HUN_COUNT; ++i) {
+        for (int i = 0; i < MAX_HUN_COUNT + 1; ++i) {
             loadTb(FengZi, i, true);
             loadTb(FengZi, i, false);
 
