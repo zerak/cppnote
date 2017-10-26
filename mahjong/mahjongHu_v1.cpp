@@ -16,7 +16,7 @@ typedef string Val;
 typedef map<Key,Val> tbMap;
 
 #define MAX_HUN_COUNT 8
-#define MAX_MJ_CODEARRAY 43
+#define MAX_MJ_CODEARRAY 35
 
 /*
  * 该版本穷举所有可胡牌型，加载到内存，根据当前手牌牌型，查表验证是否可胡
@@ -128,6 +128,10 @@ public:
 
         memset(title, 0, sizeof(title));
         for (int i = 8; i <= 32; i++) {
+            if (i == 15 || i == 16 ||
+                i == 24 || i == 25) {
+                continue;
+            }
             title[i] = 1;
             title[i+1] = 1;
             title[i+2] = 1;
