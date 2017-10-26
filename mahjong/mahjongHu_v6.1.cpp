@@ -14,6 +14,9 @@
 
 using namespace std;
 
+/*
+ * 该版本是目前尚未发现bug的版本
+*/
 class MjMapTbV6 {
 private:
 #define MAX_TOTAL_TYPE 34

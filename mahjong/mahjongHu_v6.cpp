@@ -14,6 +14,10 @@
 
 using namespace std;
 
+/*
+ * 该版本在处理多于4张牌的情况下，存在bug
+ * 比如：422000114, 11444
+*/
 class MjMapTbV6 {
 private:
 #define MAX_TOTAL_TYPE 34
