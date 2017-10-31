@@ -327,7 +327,8 @@ public:
 						if (i < nCount) {
 							byDelIndex = min(i, int(nCount));
 						}
-					} else {
+					}
+					else {
 						byDelIndex = i;
 					}
 					nVal |= (int)(byTemp - 3) << (2 * i);
@@ -339,6 +340,9 @@ public:
 
 			if (nNum == 0)
 				continue;
+
+			if (nVal >= sizeof(m_dError) / sizeof(m_dError[0]))
+				return false;
 
 			if (m_dError[nVal])
 				return false;

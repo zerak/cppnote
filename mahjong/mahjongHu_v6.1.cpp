@@ -328,6 +328,10 @@ public:
 			if (nNum == 0)
 				continue;
 
+			if (nVal >= sizeof(m_dError) / sizeof(m_dError[0])) {
+				return false;
+			}
+
 			if (m_dError[nVal])
 				return false;
 
@@ -435,12 +439,12 @@ void checkV1(MjMapTbV6& t) {
 	cout << "====begin checkV1 ..." << endl;
 	// 原手牌格式
 	unsigned char cards[] = {
-			//1, 1, 4, 4, 4, 0, 0, 0, 0,    // 万8-16 0 8
-			4, 2, 2, 0, 0, 0, 1, 1, 4,    // 万8-16 0 8
+			1, 1, 2, 2, 4, 0, 0, 0, 0,    // 万8-16 0 8
+//			3, 2, 2, 0, 0, 0, 1, 1, 3,    // 万8-16 0 8
 			0, 0, 0, 0, 0, 0, 0, 0, 0,    // 条17-25 9 17
 			0, 0, 0, 0, 0, 0, 0, 0, 0,    // 筒26-34 18 26
 			0, 0, 0, 0, 0, 0, 0,          // 风字牌1-7 27 33
-			0,
+			4,
 	};
 
 	double timeUse = 0;
