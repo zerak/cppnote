@@ -3,10 +3,11 @@
 #define MJ_DESK_H__
 
 class MjStateManager;
-class MjDesk {
+class MjDesk
+{
 public:
     MjDesk();
-    ~MjDesk();
+    virtual ~MjDesk();
 
 public:
     void start();

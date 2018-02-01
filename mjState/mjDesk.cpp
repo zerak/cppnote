@@ -1,5 +1,4 @@
 
-#include <unistd.h>
 #include "mjDesk.h"
 #include "mjStateManager.h"
 #include "mjStateIdel.h"
@@ -7,19 +6,17 @@
 
 MjDesk::MjDesk()
 {
-    m_StateMgr = 0;
+    m_StateMgr = new MjStateManager();
 }
 
 MjDesk::~MjDesk()
 {
     delete m_StateMgr;
-    m_StateMgr = 0;
+    m_StateMgr = nullptr;
 }
 
 void MjDesk::start()
 {
-    m_StateMgr = new MjStateManager();
-
     MjStateIdel::create(m_StateMgr,GameState_Idle);
     MjStateGaming::create(m_StateMgr,GameState_GameIng);
 
@@ -31,20 +28,3 @@ void MjDesk::loop()
     m_StateMgr->loop();
 }
 
-//||||||||||||||||||||
-// main entry
-//||||||||||||||||||||
-int main()
-{
-    MjDesk desk;
-    desk.start();
-
-    // loop
-    while (true)
-    {
-        desk.loop();
-        sleep(1);
-    }
-
-    return 0;
-}

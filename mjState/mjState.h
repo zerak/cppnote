@@ -50,10 +50,12 @@ public:
 	virtual void	popAllAndPushState(MjState* state) = 0;
 };
 
-class MjState{
+class MjState
+{
 public:
 	static void create(MjStateListener* parent, const GameState name){};
-
+	MjState(){};
+	virtual ~MjState(){};
 	void destroy(){delete this;}
 
 public:
@@ -64,8 +66,6 @@ public:
 	virtual void update() = 0;
 
 protected:
-	MjState(){};
-
 	MjState*	findByName(GameState stateName){return m_pParent->findByName(stateName);}
 	void		changeState(MjState* state){m_pParent->changeState(state);}
 	bool		pushState(MjState* state){return m_pParent->pushState(state);}
